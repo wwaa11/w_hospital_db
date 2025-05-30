@@ -57,8 +57,8 @@ class Procedure implements ToCollection
     }
     public function collection(Collection $rows)
     {
-        $Procedure_Excel  = true;
-        $ProcedureInsert  = false;
+        $Procedure_Excel  = false;
+        $ProcedureInsert  = true;
         $ProcedureSetting = [
             'clinic'            => 'OBS',
             'name'              => 'PAKAWA KAPHONDEE',
@@ -104,8 +104,7 @@ class Procedure implements ToCollection
         }
 
         foreach ($rows as $rowIndex => $row) {
-            if ($rowIndex >= 3 && $row[1] !== null) {
-
+            if ($rowIndex >= 2 && $row[1] !== null) {
                 if ($Procedure_Excel) {
                     $procedureID += 1;
                     $procedureArray = [
@@ -134,12 +133,12 @@ class Procedure implements ToCollection
                 }
 
                 if ($ProcedureInsert) {
+                    // dump('Insert :');
+                    // $procedureID = 'temp';
+                    // dump($procedureArray);
+
                     // $procedureID = DB::connection('K2DEV_SUR')->table('m_Procedure')->InsertGetId($procedureArray);
                     // $procedureID = DB::connection('K2PROD_SUR')->table('m_Procedure')->InsertGetId($procedureArray);
-                    dump('Insert :');
-                    $procedureID = 'temp';
-                    dump($procedureArray);
-
                 }
 
                 $medsuppilesThai = $this->medSuppilesArray($procedureID, $row[2], 'Thai', $ProcedureSetting, $ProcedureInsert);
@@ -157,10 +156,11 @@ class Procedure implements ToCollection
                     $arrayPriceInsert[] = $medsuppilesInter;
                     $arrayPriceInsert[] = $medsuppilesArab;
 
+                    // dump('Insert :');
+                    // dump($arrayPriceInsert);
+
                     // DB::connection('K2DEV_SUR')->table('m_MedicalSuppliesInOper')->Insert($arrayPriceInsert);
                     // DB::connection('K2PROD_SUR')->table('m_MedicalSuppliesInOper')->Insert($arrayPriceInsert);
-                    dump('Insert :');
-                    dump($arrayPriceInsert);
                 }
             }
         }

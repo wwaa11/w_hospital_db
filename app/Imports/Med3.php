@@ -6,55 +6,53 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 
 class Med3 implements ToCollection
 {
-    /**
-     * @param Collection $collection
-     */
+    public function medSuppiles3Array($national, $code, $name, $type, $uom, $price, $supplier, $clinic)
+    {
+        return [
+            "Nationality"   => $national,
+            "Code"          => $code,
+            "Name"          => $name,
+            "Type"          => 'Equipment',
+            "EquipmentType" => $type,
+            "UOM"           => $uom,
+            "Price"         => $price,
+            "Supplier"      => $supplier,
+            "CreateDate"    => date('Y-m-d H:i:s'),
+            "CreateBy"      => 'PAKAWA KAPHONDEE',
+            "UpdateBy"      => date('Y-m-d H:i:s'),
+            "Status"        => 'Active',
+            "Clinic"        => $clinic,
+        ];
+    }
     public function collection(Collection $rows)
     {
-        $data    = [];
-        $supplie = '';
+        $clinic = 'SUR';
+
         foreach ($rows as $rowIndex => $row) {
-            if ($rowIndex == 5) {
-                dump($row);
-            }
-            if ($rowIndex >= 3 && $row[2] !== null) {
-                if ($row[0] !== null) {
-                    $supplie = $row[0];
-                }
-                $data[] = [
-                    'Equipment',
-                    $supplie,
-                    'Thai',
-                    $row[3],
-                    $row[2],
-                    $row[1],
-                    $row[5],
-                    $row[4],
-                ];
-                $data[] = [
-                    'Equipment',
-                    $supplie,
-                    'Inter',
-                    $row[3],
-                    $row[2],
-                    $row[1],
-                    $row[6],
-                    $row[4],
-                ];
-                $data[] = [
-                    'Equipment',
-                    $supplie,
-                    'Arab',
-                    $row[3],
-                    $row[2],
-                    $row[1],
-                    $row[7],
-                    $row[4],
-                ];
+            if ($rowIndex > 2 && $row[0] !== null) {
+                $code       = $row[3];
+                $name       = $row[2];
+                $type       = $row[1];
+                $uom        = $row[4];
+                $priceTH    = $row[5];
+                $priceInter = $row[6];
+                $priceArab  = $row[7];
+                $supplier   = $row[0];
+
+                $arrayPriceInsert   = [];
+                $medsuppilesThai    = $this->medSuppiles3Array('Thai', $code, $name, $type, $uom, $priceTH, $supplier, $clinic);
+                $arrayPriceInsert[] = $medsuppilesThai;
+
+                $medsuppilesInter   = $this->medSuppiles3Array('Inter', $code, $name, $type, $uom, $priceInter, $supplier, $clinic);
+                $arrayPriceInsert[] = $medsuppilesInter;
+
+                $medsuppilesArab    = $this->medSuppiles3Array('Arab', $code, $name, $type, $uom, $priceArab, $supplier, $clinic);
+                $arrayPriceInsert[] = $medsuppilesArab;
+
+                // dump($arrayPriceInsert);
+                // DB::connection('K2DEV_SUR')->table('m_MedicalSupplies3')->Insert($arrayPriceInsert);
+                // DB::connection('K2PROD_SUR')->table('m_MedicalSupplies3')->Insert($arrayPriceInsert);
             }
         }
-        dd(json_encode($data, JSON_UNESCAPED_UNICODE));
-
-        return $data;
     }
 }

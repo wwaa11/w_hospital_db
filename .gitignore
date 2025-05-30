@@ -3,8 +3,8 @@
 /public/build
 /public/hot
 /public/storage
+/public/K2_*
 /public/procedure
-/public/excel
 /public/file
 /storage/*.key
 /vendor

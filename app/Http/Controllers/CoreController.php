@@ -809,6 +809,8 @@ class CoreController extends Controller
 
         return view('lineOAtoday')->with(compact('output', 'dateForm', 'dateTO'));
     }
+
+    // Depression
     public function Depress()
     {
         $data        = [];
@@ -816,8 +818,8 @@ class CoreController extends Controller
         $doctorName  = DB::connection('SSB')->table("HNDOCTOR_MASTER")->get();
         $clinicName  = DB::connection('SSB')->table("DNSYSCONFIG")->where('CtrlCode', '42203')->get();
 
-        $startDate = '2024-07-01';
-        $endDate   = '2024-09-30';
+        $startDate = '2024-10-01';
+        $endDate   = '2024-12-31';
         $clinic    = ['1500', '1502'];
         $icd       = ['F32.0', 'F32.1', 'F32.2', 'F32.3', 'F32.4', 'F32.6', 'F32.7', 'F32.8', 'F32.9'];
         $visits    = DB::connection('SSB')
@@ -892,8 +894,8 @@ class CoreController extends Controller
                 }
             }
         }
-        $RecoveryStartDate = '2024-10-01';
-        $RecoveryEndDate   = '2024-12-31';
+        $RecoveryStartDate = '2025-01-01';
+        $RecoveryEndDate   = '2025-03-31';
         $visits            = DB::connection('SSB')
             ->table('HNOPD_MASTER')
             ->join('HNOPD_PRESCRIP', function ($join) {
