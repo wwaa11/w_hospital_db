@@ -1,32 +1,46 @@
 <?php
 namespace App\Imports;
 
+use App\Services\K2Logger;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
 
 class Med3 implements ToCollection
 {
+    protected $clinic;
+    protected $environment;
+    protected $logger;
+
+    public function __construct($clinic, $environment)
+    {
+        $this->clinic      = $clinic;
+        $this->environment = $environment;
+        $this->logger      = new K2Logger();
+    }
+
     public function medSuppiles3Array($national, $code, $name, $type, $uom, $price, $supplier, $clinic)
     {
         return [
-            "Nationality"   => $national,
-            "Code"          => $code,
-            "Name"          => $name,
-            "Type"          => 'Equipment',
-            "EquipmentType" => $type,
-            "UOM"           => $uom,
-            "Price"         => $price,
-            "Supplier"      => $supplier,
-            "CreateDate"    => date('Y-m-d H:i:s'),
-            "CreateBy"      => 'PAKAWA KAPHONDEE',
-            "UpdateBy"      => date('Y-m-d H:i:s'),
-            "Status"        => 'Active',
-            "Clinic"        => $clinic,
+            "Nationality"     => $national,
+            "Code"            => $code,
+            "Name"            => $name,
+            "Type"            => 'Equipment',
+            "EquipmentType"   => $type,
+            "UOM"             => $uom,
+            "Price"           => $price,
+            "Supplier"        => $supplier,
+            "CreateDate"      => date('Y-m-d H:i:s'),
+            "CreateBy"        => 'PAKAWA KAPHONDEE',
+            "UpdateBy"        => date('Y-m-d H:i:s'),
+            "Status"          => 'Active',
+            "ClinicShortName" => $clinic,
         ];
     }
+
     public function collection(Collection $rows)
     {
-        $clinic = 'SUR';
+        $clinic = $this->clinic;
 
         foreach ($rows as $rowIndex => $row) {
             if ($rowIndex > 2 && $row[0] !== null) {
@@ -49,10 +63,26 @@ class Med3 implements ToCollection
                 $medsuppilesArab    = $this->medSuppiles3Array('Arab', $code, $name, $type, $uom, $priceArab, $supplier, $clinic);
                 $arrayPriceInsert[] = $medsuppilesArab;
 
-                // dump($arrayPriceInsert);
-                // DB::connection('K2DEV_SUR')->table('m_MedicalSupplies3')->Insert($arrayPriceInsert);
-                // DB::connection('K2PROD_SUR')->table('m_MedicalSupplies3')->Insert($arrayPriceInsert);
+                if ($this->environment == 'K2DEV_SUR') {
+                    DB::connection('K2DEV_SUR')->table('m_MedicalSupplies3')->Insert($arrayPriceInsert);
+                } else {
+                    DB::connection('K2PROD_SUR')->table('m_MedicalSupplies3')->Insert($arrayPriceInsert);
+                }
+
+                // Log the data before insertion
+                $this->logger->logMed3($this->clinic, $this->environment, [
+                    'supplier'      => $supplier,
+                    'equipmentType' => $type,
+                    'name'          => $name,
+                    'code'          => $code,
+                    'uom'           => $uom,
+                    'thai'          => $priceTH,
+                    'inter'         => $priceInter,
+                    'arab'          => $priceArab,
+                ]);
             }
         }
+
+        return;
     }
 }

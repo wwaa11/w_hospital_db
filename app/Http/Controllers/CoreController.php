@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Storage;
 
 class CoreController extends Controller
 {
+    public function index()
+    {
+        return view('index');
+    }
+
     public function AppointmentSAP()
     {
         $apps = DB::connection('SSB')->table("HNAPPMNT_HEADER")
@@ -809,7 +814,39 @@ class CoreController extends Controller
 
         return view('lineOAtoday')->with(compact('output', 'dateForm', 'dateTO'));
     }
+    public function ARCode()
+    {
+        $arrayARCode = [
+            'ARD11',
+            'ARD12',
+            'ARD15',
+            'ARD16',
+            'ARD17',
+            'ARD18',
+        ];
+        $doctorNameArray = DB::connection('SSB')->table("HNDOCTOR_MASTER")->get();
+        $datas           = DB::connection("SSB")
+            ->table("HNPAT_RIGHT")
+            ->leftjoin('HNPAT_NAME', 'HNPAT_RIGHT.HN', '=', 'HNPAT_NAME.HN')
+            ->whereIN('HNPAT_RIGHT.ARCode', $arrayARCode)
+            ->where('HNPAT_NAME.SuffixSmall', 0)
+            ->orderBy('HNPAT_RIGHT.ARCode', 'ASC')
+            ->orderBy('HNPAT_RIGHT.HN', 'ASC')
+            ->select(
+                'HNPAT_RIGHT.HN',
+                'HNPAT_RIGHT.ARCode',
+                'HNPAT_RIGHT.ReferToDoctor',
+                'HNPAT_NAME.FirstName as name',
+                'HNPAT_NAME.LastName as lastname',
+            )
+            ->get();
 
+        foreach ($datas as $data) {
+            $data->fullname   = $this->FullName($data->name, $data->lastname);
+            $data->DoctorName = $this->DoctorName($doctorNameArray, $data->ReferToDoctor);
+        }
+        return view('ARCode')->with(compact('datas'));
+    }
     // Depression
     public function Depress()
     {
@@ -980,7 +1017,10 @@ class CoreController extends Controller
                 $temp = explode("\\", $name);
                 $name = $temp[1] . $temp[0];
             }
+        } else {
+            $name = null;
         }
+
         return $name;
     }
     public function ClinicName($data, $code)
