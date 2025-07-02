@@ -848,18 +848,21 @@ class CoreController extends Controller
         return view('ARCode')->with(compact('datas'));
     }
     // Depression
-    public function Depress()
+    public function Depress(Request $request)
     {
+        $startDate         = $request->input('startdate', date('Y-01-01'));
+        $endDate           = $request->input('enddate', date('Y-03-31'));
+        $RecoveryStartDate = $request->input('recoverystartdate', date('Y-04-30'));
+        $RecoveryEndDate   = $request->input('recoveryenddate', date('Y-06-30'));
+
         $data        = [];
         $checkFollow = [];
         $doctorName  = DB::connection('SSB')->table("HNDOCTOR_MASTER")->get();
         $clinicName  = DB::connection('SSB')->table("DNSYSCONFIG")->where('CtrlCode', '42203')->get();
 
-        $startDate = '2024-10-01';
-        $endDate   = '2024-12-31';
-        $clinic    = ['1500', '1502'];
-        $icd       = ['F32.0', 'F32.1', 'F32.2', 'F32.3', 'F32.4', 'F32.6', 'F32.7', 'F32.8', 'F32.9'];
-        $visits    = DB::connection('SSB')
+        $clinic = ['1500', '1502'];
+        $icd    = ['F32.0', 'F32.1', 'F32.2', 'F32.3', 'F32.4', 'F32.6', 'F32.7', 'F32.8', 'F32.9'];
+        $visits = DB::connection('SSB')
             ->table('HNOPD_MASTER')
             ->join('HNOPD_PRESCRIP', function ($join) {
                 $join->on('HNOPD_MASTER.VisitDate', '=', 'HNOPD_PRESCRIP.VisitDate')
@@ -931,9 +934,7 @@ class CoreController extends Controller
                 }
             }
         }
-        $RecoveryStartDate = '2025-01-01';
-        $RecoveryEndDate   = '2025-03-31';
-        $visits            = DB::connection('SSB')
+        $visits = DB::connection('SSB')
             ->table('HNOPD_MASTER')
             ->join('HNOPD_PRESCRIP', function ($join) {
                 $join->on('HNOPD_MASTER.VisitDate', '=', 'HNOPD_PRESCRIP.VisitDate')

@@ -11,6 +11,7 @@ class K2Controller extends Controller
 {
     public function index()
     {
+
         return view('k2.index');
     }
 

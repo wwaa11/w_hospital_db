@@ -32,7 +32,8 @@ class Med3 implements ToCollection
             "Supplier"        => $supplier,
             "CreateDate"      => date('Y-m-d H:i:s'),
             "CreateBy"        => 'PAKAWA KAPHONDEE',
-            "UpdateBy"        => date('Y-m-d H:i:s'),
+            "UpdateDate"      => date('Y-m-d H:i:s'),
+            "UpdateBy"        => 'PAKAWA KAPHONDEE',
             "Status"          => 'Active',
             "ClinicShortName" => $clinic,
         ];
