@@ -1,6 +1,6 @@
 @extends("layouts.app")
 @section("content")
-    <form class="m-auto mb-6 w-full max-w-3xl rounded bg-white p-6 shadow" method="get" action="/depress">
+    <form class="m-auto mb-6 w-full max-w-3xl rounded bg-white p-6 shadow" method="get" action="{{ route("depress") }}">
         <div class="mb-4">
             <h2 class="mb-2 text-lg font-semibold text-blue-700">NewCase Date Range</h2>
             <div class="flex flex-wrap gap-4">
