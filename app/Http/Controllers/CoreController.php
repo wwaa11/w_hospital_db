@@ -14,6 +14,70 @@ class CoreController extends Controller
         return view('index');
     }
 
+    public function getDoctorPatientAppointment()
+    {
+        $apps = DB::connection('SSB')->table("HNAPPMNT_HEADER")
+            ->whereDate('AppointDateTime', '2025-08-24')
+            ->leftjoin('HNPAT_NAME', 'HNAPPMNT_HEADER.HN', 'HNPAT_NAME.HN')
+            ->where('HNPAT_NAME.SuffixSmall', 0)
+            ->whereNull('CxlReasonCode')
+            ->select(
+                'HNAPPMNT_HEADER.HN',
+                'HNAPPMNT_HEADER.AppointmentNo',
+                'HNAPPMNT_HEADER.AppointDateTime as date',
+                'HNAPPMNT_HEADER.Doctor as doctor',
+                'HNAPPMNT_HEADER.Clinic as clinic',
+                'HNPAT_NAME.FirstName',
+                'HNPAT_NAME.LastName',
+            )
+            ->orderBy('HNAPPMNT_HEADER.HN', 'ASC')
+            ->orderBy('HNAPPMNT_HEADER.Clinic', 'ASC')
+            ->get();
+        $doctorName = DB::connection('SSB')->table("HNDOCTOR_MASTER")->get();
+        $clinicName = DB::connection('SSB')->table("DNSYSCONFIG")->where('CtrlCode', '42203')->get();
+
+        $data = [];
+        foreach ($apps as $app) {
+            if (! array_key_exists($app->HN, $data)) {
+                $data[$app->HN] = [
+                    'hn'     => $app->HN,
+                    'appno'  => $app->AppointmentNo,
+                    'date'   => $app->date,
+                    'name'   => $this->FullName($app->FirstName, $app->LastName),
+                    'clinic' => [],
+                    'count'  => 0,
+                ];
+            }
+            $data[$app->HN]['count'] += 1;
+            $data[$app->HN]['clinic'][] = [
+                'clinic' => $this->ClinicName($clinicName, $app->clinic),
+                'doctor' => $this->DoctorName($doctorName, $app->doctor),
+            ];
+        }
+
+        return view('gdpa')->with(compact('apps', 'data'));
+    }
+
+    public function line_all()
+    {
+        $output = DB::connection("SSB")
+            ->table("HNPAT_REF")
+            ->join("HNPAT_INFO", "HNPAT_REF.HN", "=", "HNPAT_INFO.HN")
+            ->whereNotNull('LineID')
+            ->select(
+                'HNPAT_INFO.LineID',
+                'HNPAT_INFO.HN',
+                'HNPAT_REF.RefNoType',
+                'HNPAT_REF.IDCardType',
+                'HNPAT_REF.RefNo',
+                'HNPAT_REF.RefIssueBy',
+            )
+            ->orderBy('HNPAT_INFO.HN', 'desc')
+            ->get();
+
+        return view('lineRef')->with(compact('output'));
+    }
+
     public function AppointmentSAP()
     {
         $apps = DB::connection('SSB')->table("HNAPPMNT_HEADER")
@@ -529,26 +593,7 @@ class CoreController extends Controller
 
         return view('linePDPA')->with(compact('data'));
     }
-    public function lineRef()
-    {
-        $output = DB::connection("SSB")
-            ->table("HNPAT_REF")
-            ->join("HNPAT_INFO", "HNPAT_REF.HN", "=", "HNPAT_INFO.HN")
-        // ->where('IDCardType','5')
-            ->whereNotNull('LineID')
-            ->select(
-                'HNPAT_INFO.LineID',
-                'HNPAT_INFO.HN',
-                'HNPAT_REF.RefNoType',
-                'HNPAT_REF.IDCardType',
-                'HNPAT_REF.RefNo',
-                'HNPAT_REF.RefIssueBy',
-            )
-            ->orderBy('HNPAT_INFO.HN', 'desc')
-            ->get();
 
-        return view('lineRef')->with(compact('output'));
-    }
     public function dental()
     {
         $dateFilter = [
@@ -1083,5 +1128,80 @@ class CoreController extends Controller
         $date = substr($date[2], 0, 2) . " " . $fullmonth . " " . $year;
 
         return $date;
+    }
+
+    public function excelImport()
+    {
+        return view('excel-import');
+    }
+
+    public function processExcelImport(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|mimes:xlsx,xls,csv|max:10240', // 10MB max
+        ]);
+
+        try {
+            $file = $request->file('excel_file');
+            $data = \Maatwebsite\Excel\Facades\Excel::toArray([], $file);
+
+            // Get the first sheet
+            $sheet = $data[0];
+
+            // Start from row 5 (index 4) as requested
+            $processedData = [];
+            for ($i = 4; $i < count($sheet); $i++) {
+                if (! empty(array_filter($sheet[$i]))) { // Skip empty rows
+                    $processedData[] = [
+                        "no"     => $sheet[$i][2],
+                        "code"   => $sheet[$i][3],
+                        "number" => $sheet[$i][4],
+                        "name"   => $sheet[$i][5],
+                    ];
+                }
+            }
+
+            return view('excel-import', [
+                'data'    => $processedData,
+                'success' => 'Excel file processed successfully! Found ' . count($processedData) . ' rows starting from row 5.',
+            ]);
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Error processing Excel file: ' . $e->getMessage()]);
+        }
+    }
+
+    public function getRandomRows(Request $request)
+    {
+        try {
+            $excelData = json_decode($request->input('excel_data'), true);
+
+            if (empty($excelData)) {
+                return back()->withErrors(['error' => 'No data available for random selection.']);
+            }
+
+            // Get 5 random rows (or all rows if less than 5)
+            $randomCount = min(5, count($excelData));
+            $randomKeys  = array_rand($excelData, $randomCount);
+
+            // Handle case where only 1 row is selected (array_rand returns int, not array)
+            if (! is_array($randomKeys)) {
+                $randomKeys = [$randomKeys];
+            }
+
+            $randomData = [];
+            foreach ($randomKeys as $key) {
+                $randomData[] = $excelData[$key];
+            }
+
+            return view('excel-import', [
+                'data'       => $excelData,
+                'randomData' => $randomData,
+                'success'    => 'Selected ' . count($randomData) . ' random rows!',
+            ]);
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Error selecting random rows: ' . $e->getMessage()]);
+        }
     }
 }

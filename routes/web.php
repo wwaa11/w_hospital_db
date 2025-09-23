@@ -4,7 +4,10 @@ use App\Http\Controllers\K2Controller;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [CoreController::class, 'index']);
+Route::get('/gdpa', [CoreController::class, 'getDoctorPatientAppointment']);
+
 Route::get('/depress', [CoreController::class, 'Depress'])->name('depress');
+Route::get('/line/all', [CoreController::class, 'line_all'])->name('line.all');
 
 Route::get('/a7z94', [CoreController::class, 'A7z94']);
 Route::get('/a7z94Xray', [CoreController::class, 'A7Z94XRAY']);
@@ -23,3 +26,8 @@ Route::post('/k2/procedure', [K2Controller::class, 'uploadProcedureFile']);
 
 Route::get('/k2/med3', [K2Controller::class, 'Med3']);
 Route::post('/k2/med3', [K2Controller::class, 'uploadMed3File']);
+
+// Excel Import Routes
+Route::get('/random-excel', [CoreController::class, 'excelImport'])->name('excel.import.page');
+Route::post('/random-excel', [CoreController::class, 'processExcelImport'])->name('excel.import');
+Route::post('/excel-random', [CoreController::class, 'getRandomRows'])->name('excel.random');
