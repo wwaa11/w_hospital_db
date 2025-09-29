@@ -14,6 +14,52 @@ class CoreController extends Controller
         return view('index');
     }
 
+    public function AppmntQuery()
+    {
+        $data = DB::connection('SSB')->table("HNAPPMNT_HEADER")
+            ->leftJoin('HNAPPMNT_MSG', 'HNAPPMNT_HEADER.AppointmentNo', 'HNAPPMNT_MSG.AppointmentNo')
+            ->whereDate('HNAPPMNT_HEADER.AppointDateTime', '>=', '2025-09-26')
+            ->whereNull('CxlReasonCode')
+            ->where('HNAPPMNT_HEADER.HN', 'like', '%-%')
+            ->select(
+                'HNAPPMNT_HEADER.AppointmentNo',
+                'HNAPPMNT_HEADER.HN',
+                'HNAPPMNT_HEADER.Doctor',
+                'HNAPPMNT_HEADER.Clinic',
+                'HNAPPMNT_HEADER.MobilePhone',
+                'HNAPPMNT_HEADER.AppointDateTime',
+                'HNAPPMNT_HEADER.LastHNAppointmentLogType',
+                'HNAPPMNT_MSG.HNAppointmentMsgType',
+            )
+            ->orderBy('HNAPPMNT_HEADER.HN', 'ASC')
+            ->orderBy('HNAPPMNT_HEADER.AppointDateTime', 'ASC')
+            ->get();
+        $addAPP    = [];
+        $dataArray = [];
+        foreach ($data as $item) {
+            if (! in_array($item->AppointmentNo, $addAPP)) {
+                $dataArr = [
+                    'AppointmentNo'            => $item->AppointmentNo,
+                    'HN'                       => $item->HN,
+                    'Doctor'                   => $item->Doctor,
+                    'Clinic'                   => $item->Clinic,
+                    'MobilePhone'              => $item->MobilePhone,
+                    'AppointDateTime'          => $item->AppointDateTime,
+                    'LastHNAppointmentLogType' => $item->LastHNAppointmentLogType,
+                    'HNAppointmentMsgType'     => null,
+                ];
+                $addAPP[]                        = $item->AppointmentNo;
+                $dataArray[$item->AppointmentNo] = $dataArr;
+            }
+
+            if ($item->HNAppointmentMsgType == '3') {
+                $dataArray[$item->AppointmentNo]['HNAppointmentMsgType'] = 3;
+            }
+        }
+
+        return view('appmnt')->with(compact('dataArray'));
+    }
+
     public function getDoctorPatientAppointment()
     {
         $apps = DB::connection('SSB')->table("HNAPPMNT_HEADER")

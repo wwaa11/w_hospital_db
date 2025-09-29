@@ -17,20 +17,7 @@ class K2Controller extends Controller
 
     public function deleteProcedure()
     {
-        dump('deleteProcedure');
-        dump('Prevent accident delete procedure!');
-        die();
 
-        $procedure_id = 695;
-        $procedure    = DB::connection('K2DEV_SUR')
-            ->table('m_Procedure')
-            ->where('ID', '>=', $procedure_id)
-            ->delete();
-
-        $procedure_supplies = DB::connection('K2DEV_SUR')
-            ->table('m_MedicalSuppliesInOper')
-            ->where('ProcedureID', '>=', $procedure_id)
-            ->delete();
     }
 
     public function Procedure(Request $request)
@@ -46,6 +33,7 @@ class K2Controller extends Controller
 
         return view('k2.Procedure_upload', compact('clinics'));
     }
+
     public function uploadProcedureFile(Request $request)
     {
         $request->validate([

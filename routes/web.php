@@ -4,6 +4,9 @@ use App\Http\Controllers\K2Controller;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [CoreController::class, 'index']);
+
+Route::get('/appmnt', [CoreController::class, 'AppmntQuery']);
+
 Route::get('/gdpa', [CoreController::class, 'getDoctorPatientAppointment']);
 
 Route::get('/depress', [CoreController::class, 'Depress'])->name('depress');

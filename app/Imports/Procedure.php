@@ -42,12 +42,7 @@ class Procedure implements ToCollection
                                  // \Log::warning("Unexpected price format with hyphen: " . $price);
             }
         } else {
-            // If no hyphen, use the cleaned price directly (ensure it's numeric)
             $finalPrice = is_numeric($cleanedPrice) ? (float) $cleanedPrice : 0;
-            // You might want to add logging here if $cleanedPrice is not numeric
-            // if (!is_numeric($cleanedPrice)) {
-            //     \Log::warning("Non-numeric price without hyphen: " . $price);
-            // }
         }
 
         $name         = $setting['name'];
@@ -89,6 +84,25 @@ class Procedure implements ToCollection
 
         foreach ($rows as $rowIndex => $row) {
             if ($rowIndex >= 2 && $row[1] !== null) {
+
+                // Add search by ProcedureName
+                $procedureName     = $row[1];
+                $existingProcedure = DB::connection($this->environment)
+                    ->table('m_Procedure')
+                    ->where('ProcedureName', $procedureName)
+                    ->where('ClinicShortName', $ProcedureSetting['clinic'])
+                    ->where('Status', 'Active')
+                    ->first();
+
+                if ($existingProcedure) {
+                    // Log the existing procedure
+                    $this->logger->logProcedure($this->clinic, $this->environment, [
+                        'message'   => 'Procedure already exists',
+                        'procedure' => $existingProcedure,
+                    ]);
+                    continue; // Skip to the next row
+                }
+
                 $procedureArray = [
                     "ICD9"            => "",
                     "ProcedureName"   => $row[1],
@@ -100,12 +114,7 @@ class Procedure implements ToCollection
                     "ClinicShortName" => $ProcedureSetting['clinic'],
                 ];
 
-                $procedureID = 'temp';
-                if ($this->environment == 'K2DEV_SUR') {
-                    $procedureID = DB::connection('K2DEV_SUR')->table('m_Procedure')->InsertGetId($procedureArray);
-                } else {
-                    $procedureID = DB::connection('K2PROD_SUR')->table('m_Procedure')->InsertGetId($procedureArray);
-                }
+                $procedureID = DB::connection($this->environment)->table('m_Procedure')->InsertGetId($procedureArray);
 
                 $medsuppilesThai = $this->medSuppilesArray($procedureID, $row[2], 'Thai', $ProcedureSetting);
                 $medsuppiles[]   = $medsuppilesThai;
@@ -129,11 +138,7 @@ class Procedure implements ToCollection
                     'arab'      => $medsuppilesArab,
                 ]);
 
-                if ($this->environment == 'K2DEV_SUR') {
-                    DB::connection('K2DEV_SUR')->table('m_MedicalSuppliesInOper')->Insert($arrayPriceInsert);
-                } else {
-                    DB::connection('K2PROD_SUR')->table('m_MedicalSuppliesInOper')->Insert($arrayPriceInsert);
-                }
+                DB::connection($this->environment)->table('m_MedicalSuppliesInOper')->Insert($arrayPriceInsert);
             }
         }
 
