@@ -23,21 +23,6 @@
                                     Your central hub for efficient data management and query operations.
                                 </p>
                             </div>
-
-                            <div class="grid gap-6 md:grid-cols-2">
-                                <a href="{{ route("depress") }}">
-                                    <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
-                                        <div class="mb-4 text-blue-600">
-                                            <i class="fas fa-search text-3xl"></i>
-                                        </div>
-                                        <h3 class="mb-2 text-xl font-semibold text-gray-800">Depression</h3>
-                                        <p class="text-gray-600">
-                                            Export Depression Data.
-                                        </p>
-                                    </div>
-                                </a>
-                            </div>
-
                         </div>
                     </div>
                 </div>

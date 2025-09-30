@@ -14,6 +14,17 @@
 </head>
 
 <body>
+    <ul class="flex gap-4 bg-gradient-to-r from-blue-500 to-purple-500 p-3 text-white">
+        <li class="mb-2 text-lg font-semibold">
+            <a href="{{ route("index") }}">WEB Query</a>
+        </li>
+        <li class="mb-2 text-lg font-semibold">
+            <a href="{{ route("depression.index") }}">Depression</a>
+        </li>
+        <li class="mb-2 text-lg font-semibold">
+            <a href="{{ route("k2.index") }}">K2</a>
+        </li>
+    </ul>
     <div class="p-3">
         @yield("content")
     </div>

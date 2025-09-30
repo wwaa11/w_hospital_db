@@ -76,7 +76,7 @@ class Procedure implements ToCollection
     {
         $ProcedureSetting = [
             'clinic'            => $this->clinic,
-            'name'              => 'PAKAWA KAPHONDEE',
+            'name'              => auth()->user()->name_EN,
             'med_percent'       => 5,
             'supplies_percent'  => 35,
             'equipment_percent' => 60,
@@ -130,15 +130,15 @@ class Procedure implements ToCollection
                 $arrayPriceInsert[] = $medsuppilesInter;
                 $arrayPriceInsert[] = $medsuppilesArab;
 
-                // Log the data before insertion
+                DB::connection($this->environment)->table('m_MedicalSuppliesInOper')->Insert($arrayPriceInsert);
+
+                // Log the data after insertion
                 $this->logger->logProcedure($this->clinic, $this->environment, [
                     'procedure' => $procedureArray,
                     'thai'      => $medsuppilesThai,
                     'inter'     => $medsuppilesInter,
                     'arab'      => $medsuppilesArab,
                 ]);
-
-                DB::connection($this->environment)->table('m_MedicalSuppliesInOper')->Insert($arrayPriceInsert);
             }
         }
 

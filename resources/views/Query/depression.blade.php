@@ -1,42 +1,41 @@
 @extends("layouts.app")
 @section("content")
-    <form class="m-auto mb-6 w-full max-w-3xl rounded bg-white p-6 shadow" method="get" action="{{ route("depress") }}">
-        <div class="mb-4">
-            <h2 class="mb-2 text-lg font-semibold text-blue-700">NewCase Date Range</h2>
-            <div class="flex flex-wrap gap-4">
-                <label class="flex flex-col">
-                    <span class="mb-1">Start Date</span>
-                    <input class="rounded border p-2" type="date" name="startdate" value="{{ request("startdate", $date["date_1_form"] ?? "") }}" required>
-                </label>
-                <label class="flex flex-col">
-                    <span class="mb-1">End Date</span>
-                    <input class="rounded border p-2" type="date" name="enddate" value="{{ request("enddate", $date["date_1_to"] ?? "") }}" required>
-                </label>
+    <div class="m-auto mb-6 w-full max-w-3xl rounded bg-white p-6 shadow">
+        <form class="" method="get" action="{{ route("depression.index") }}">
+            <div class="mb-4">
+                <h2 class="mb-2 text-lg font-semibold text-blue-700">NewCase Date Range</h2>
+                <div class="flex flex-wrap gap-4">
+                    <label class="flex flex-col">
+                        <span class="mb-1">Start Date</span>
+                        <input class="rounded border p-2" type="date" name="startdate" value="{{ request("startdate", $date["date_1_form"] ?? "") }}" required>
+                    </label>
+                    <label class="flex flex-col">
+                        <span class="mb-1">End Date</span>
+                        <input class="rounded border p-2" type="date" name="enddate" value="{{ request("enddate", $date["date_1_to"] ?? "") }}" required>
+                    </label>
+                </div>
             </div>
-        </div>
-        <div class="mb-4">
-            <h2 class="mb-2 text-lg font-semibold text-blue-700">MDD Date Range</h2>
-            <div class="flex flex-wrap gap-4">
-                <label class="flex flex-col">
-                    <span class="mb-1">Start Date</span>
-                    <input class="rounded border p-2" type="date" name="recoverystartdate" value="{{ request("recoverystartdate", $date["date_2_form"] ?? "") }}" required>
-                </label>
-                <label class="flex flex-col">
-                    <span class="mb-1">End Date</span>
-                    <input class="rounded border p-2" type="date" name="recoveryenddate" value="{{ request("recoveryenddate", $date["date_2_to"] ?? "") }}" required>
-                </label>
+            <div class="mb-4">
+                <h2 class="mb-2 text-lg font-semibold text-blue-700">MDD Date Range</h2>
+                <div class="flex flex-wrap gap-4">
+                    <label class="flex flex-col">
+                        <span class="mb-1">Start Date</span>
+                        <input class="rounded border p-2" type="date" name="recoverystartdate" value="{{ request("recoverystartdate", $date["date_2_form"] ?? "") }}" required>
+                    </label>
+                    <label class="flex flex-col">
+                        <span class="mb-1">End Date</span>
+                        <input class="rounded border p-2" type="date" name="recoveryenddate" value="{{ request("recoveryenddate", $date["date_2_to"] ?? "") }}" required>
+                    </label>
+                </div>
             </div>
-        </div>
-        <div class="mt-4 flex gap-4">
-            <button class="rounded bg-blue-600 px-6 py-2 text-white hover:bg-blue-700" type="submit">Filter</button>
-            <a class="rounded bg-gray-300 px-6 py-2 text-gray-800 hover:bg-gray-400" href="/depress">Reset</a>
-        </div>
-    </form>
-    <div class="flex p-3">
-        <button class="m-auto w-1/6 rounded-s border-4 border-green-400 p-3 text-green-400 transition hover:bg-green-50" onclick="exportFN()">Export</button>
+            <div class="mt-4 flex gap-4">
+                <button class="rounded bg-blue-600 px-6 py-2 text-white hover:bg-blue-700" type="submit">Filter</button>
+                <a class="rounded bg-gray-300 px-6 py-2 text-gray-800 hover:bg-gray-400" href="{{ route("depression.index") }}">Reset</a>
+                <button class="items-center rounded bg-red-400 px-6 py-2 text-white hover:bg-red-500" type="button" onclick="exportFN()">Export</button>
+            </div>
     </div>
     <div class="overflow-x-auto">
-        <table class="m-auto w-full max-w-3xl border-collapse overflow-hidden rounded border text-sm shadow" id="tabel">
+        <table class="m-auto w-full max-w-6xl border-collapse overflow-hidden rounded border text-sm shadow" id="tabel">
             <thead class="bg-blue-100">
                 <tr>
                     <th class="border p-2">#</th>

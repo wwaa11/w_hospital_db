@@ -21,6 +21,8 @@ class Med3 implements ToCollection
 
     public function medSuppiles3Array($national, $code, $name, $type, $uom, $price, $supplier, $clinic)
     {
+        $auth = auth()->user()->name_EN;
+
         return [
             "Nationality"     => $national,
             "Code"            => $code,
@@ -31,9 +33,9 @@ class Med3 implements ToCollection
             "Price"           => $price,
             "Supplier"        => $supplier,
             "CreateDate"      => date('Y-m-d H:i:s'),
-            "CreateBy"        => 'PAKAWA KAPHONDEE',
+            "CreateBy"        => $auth,
             "UpdateDate"      => date('Y-m-d H:i:s'),
-            "UpdateBy"        => 'PAKAWA KAPHONDEE',
+            "UpdateBy"        => $auth,
             "Status"          => 'Active',
             "ClinicShortName" => $clinic,
         ];
@@ -41,18 +43,46 @@ class Med3 implements ToCollection
 
     public function collection(Collection $rows)
     {
+        mb_internal_encoding("UTF-8");
         $clinic = $this->clinic;
 
         foreach ($rows as $rowIndex => $row) {
-            if ($rowIndex > 2 && $row[0] !== null) {
-                $code       = $row[3];
-                $name       = $row[2];
-                $type       = $row[1];
-                $uom        = $row[4];
-                $priceTH    = $row[5];
-                $priceInter = $row[6];
-                $priceArab  = $row[7];
+            if ($rowIndex >= 2 && $row[0] !== null) {
+                // Skip if Name & Code is empty
+                if ($row[2] == null && $row[3] == null) {
+                    $this->logger->skipMed3($this->clinic, $this->environment, [
+                        'rowIndex'      => $rowIndex,
+                        'supplier'      => $row[0],
+                        'equipmentType' => $row[1],
+                        'uom'           => $row[4],
+                        'priceTH'       => $row[5],
+                        'priceInter'    => $row[6],
+                        'priceArab'     => $row[7],
+                    ]);
+                    continue;
+                }
+
+                // Set default value if empty
+                $code       = $row[3] == null ? 'ไม่ระบุ' : $row[3];
+                $name       = mb_substr($row[2], 0, 300);
+                $type       = mb_substr($row[1], 0, 100);
+                $uom        = $row[4] == null ? 'ไม่ระบุ' : $row[4];
+                $priceTH    = $row[5] == null ? 0 : $row[5];
+                $priceInter = $row[6] == null ? 0 : $row[6];
+                $priceArab  = $row[7] == null ? 0 : $row[7];
                 $supplier   = $row[0];
+
+                // Find Duplicate
+                $existingRecord = DB::connection($this->environment)->table('m_MedicalSupplies3')
+                    ->where('ClinicShortName', $clinic)
+                    ->where('Code', $code)
+                    ->where('Name', $name)
+                    ->where('Supplier', $supplier)
+                    ->where('Status', 'Active')
+                    ->first();
+                if ($existingRecord) {
+                    continue; // Skip if duplicate found
+                }
 
                 $arrayPriceInsert   = [];
                 $medsuppilesThai    = $this->medSuppiles3Array('Thai', $code, $name, $type, $uom, $priceTH, $supplier, $clinic);
@@ -64,13 +94,9 @@ class Med3 implements ToCollection
                 $medsuppilesArab    = $this->medSuppiles3Array('Arab', $code, $name, $type, $uom, $priceArab, $supplier, $clinic);
                 $arrayPriceInsert[] = $medsuppilesArab;
 
-                if ($this->environment == 'K2DEV_SUR') {
-                    DB::connection('K2DEV_SUR')->table('m_MedicalSupplies3')->Insert($arrayPriceInsert);
-                } else {
-                    DB::connection('K2PROD_SUR')->table('m_MedicalSupplies3')->Insert($arrayPriceInsert);
-                }
+                DB::connection($this->environment)->table('m_MedicalSupplies3')->Insert($arrayPriceInsert);
 
-                // Log the data before insertion
+                // Log the data after insertion
                 $this->logger->logMed3($this->clinic, $this->environment, [
                     'supplier'      => $supplier,
                     'equipmentType' => $type,

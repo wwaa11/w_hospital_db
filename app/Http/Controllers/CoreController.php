@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
-use DateTime;
+use App\Http\Controllers\HelperController;
 use DB;
 use File;
 use Illuminate\Http\Request;
@@ -11,7 +11,8 @@ class CoreController extends Controller
 {
     public function index()
     {
-        return view('index');
+
+        return view('layouts.index');
     }
 
     public function AppmntQuery()
@@ -89,15 +90,15 @@ class CoreController extends Controller
                     'hn'     => $app->HN,
                     'appno'  => $app->AppointmentNo,
                     'date'   => $app->date,
-                    'name'   => $this->FullName($app->FirstName, $app->LastName),
+                    'name'   => HelperController::FullName($app->FirstName, $app->LastName),
                     'clinic' => [],
                     'count'  => 0,
                 ];
             }
             $data[$app->HN]['count'] += 1;
             $data[$app->HN]['clinic'][] = [
-                'clinic' => $this->ClinicName($clinicName, $app->clinic),
-                'doctor' => $this->DoctorName($doctorName, $app->doctor),
+                'clinic' => HelperController::ClinicName($clinicName, $app->clinic),
+                'doctor' => HelperController::DoctorName($doctorName, $app->doctor),
             ];
         }
 
@@ -176,7 +177,7 @@ class CoreController extends Controller
         $dataOutput = [];
         $hnArr      = [];
         foreach ($data as $hn) {
-            $age = $this->setAgeInterger($hn->BirthDateTime);
+            $age = HelperController::setAgeInterger($hn->BirthDateTime);
             if ($age <= 2) {
                 if (! in_array($hn->HN, $hnArr)) {
                     $hnArr[]             = $hn->HN;
@@ -185,8 +186,8 @@ class CoreController extends Controller
                         'diag'      => 'not Found',
                         'vaccine'   => 'not Found',
                         'hn'        => $hn->HN,
-                        'name'      => $this->FullName($hn->name, $hn->lastname),
-                        'age'       => $this->setAge($hn->BirthDateTime),
+                        'name'      => HelperController::FullName($hn->name, $hn->lastname),
+                        'age'       => HelperController::setAge($hn->BirthDateTime),
                         'phone'     => $hn->MobilePhone,
                         'lastvisit' => null,
                     ];
@@ -262,7 +263,7 @@ class CoreController extends Controller
             if ($dataOutput[$out['hn']]['show']) {
                 $visitData = collect($lastvisits)->where('HN', $out['hn'])->first();
                 if ($visitData !== null) {
-                    $dataOutput[$out['hn']]['lastvisit'] = $this->DoctorName($doctorName, $visitData->Doctor);
+                    $dataOutput[$out['hn']]['lastvisit'] = HelperController::DoctorName($doctorName, $visitData->Doctor);
                 } else {
                     $dataOutput[$out['hn']]['lastvisit'] = 'ไม่พบข้อมูล Visit';
                 }
@@ -299,7 +300,7 @@ class CoreController extends Controller
             ->get();
 
         foreach ($data as $key => $value) {
-            $value->fullname = $this->FullName($value->Firstname, $value->Lastname);
+            $value->fullname = HelperController::FullName($value->Firstname, $value->Lastname);
         }
 
         return view('hospitalrefer')->with(compact('data'));
@@ -389,7 +390,7 @@ class CoreController extends Controller
         foreach ($visits as $datavisit) {
             if ($outputData[$datavisit->hn]['show'] == false) {
                 $outputData[$datavisit->hn]['show']     = true;
-                $outputData[$datavisit->hn]['name']     = $this->FullName($datavisit->name, $datavisit->lastname);
+                $outputData[$datavisit->hn]['name']     = HelperController::FullName($datavisit->name, $datavisit->lastname);
                 $outputData[$datavisit->hn]['diagDate'] = [
                     'date' => $datavisit->date,
                     'vn'   => $datavisit->vn,
@@ -511,7 +512,7 @@ class CoreController extends Controller
         foreach ($diags as $item) {
             if ($outputData[$item->HN]['show'] == false) {
                 $outputData[$item->HN]['show'] = true;
-                $outputData[$item->HN]['name'] = $this->FullName($item->FirstName, $item->lastName);
+                $outputData[$item->HN]['name'] = HelperController::FullName($item->FirstName, $item->lastName);
                 $outputData[$item->HN]['icd']  = [
                     'date' => $item->Visitdate,
                     'vn'   => $item->VN,
@@ -682,11 +683,11 @@ class CoreController extends Controller
                 $hnArr[]           = $item->HN;
                 $output[$item->HN] = [
                     'hn'     => $item->HN,
-                    'name'   => $this->FullName($item->FirstName, $item->LastName),
+                    'name'   => HelperController::FullName($item->FirstName, $item->LastName),
                     'gender' => ($item->Gender == '1') ? 'หญิง' : 'ชาย',
-                    'age'    => $this->setAge($item->BirthDateTime),
-                    'visit'  => $this->SetDate($item->VisitDate, 'd M Y'),
-                    'doctor' => $this->DoctorName($doctorName, $item->Doctor),
+                    'age'    => HelperController::setAge($item->BirthDateTime),
+                    'visit'  => HelperController::SetDate($item->VisitDate, 'd M Y'),
+                    'doctor' => HelperController::DoctorName($doctorName, $item->Doctor),
                     'app'    => [],
                 ];
             }
@@ -715,7 +716,7 @@ class CoreController extends Controller
 
                 $output[$a->HN]['app'][$a->AppointmentNo] = [
                     'No'     => $a->AppointmentNo,
-                    'date'   => $this->SetDate($a->AppointDateTime, 'd M Y'),
+                    'date'   => HelperController::SetDate($a->AppointDateTime, 'd M Y'),
                     'status' => ($a->AppointDateTime > date('Y-m-d')) ? 'Future' : 'Missing',
                 ];
 
@@ -933,248 +934,12 @@ class CoreController extends Controller
             ->get();
 
         foreach ($datas as $data) {
-            $data->fullname   = $this->FullName($data->name, $data->lastname);
-            $data->DoctorName = $this->DoctorName($doctorNameArray, $data->ReferToDoctor);
+            $data->fullname   = HelperController::FullName($data->name, $data->lastname);
+            $data->DoctorName = HelperController::DoctorName($doctorNameArray, $data->ReferToDoctor);
         }
         return view('ARCode')->with(compact('datas'));
     }
     // Depression
-    public function Depress(Request $request)
-    {
-        $startDate         = $request->input('startdate', date('Y-01-01'));
-        $endDate           = $request->input('enddate', date('Y-03-31'));
-        $RecoveryStartDate = $request->input('recoverystartdate', date('Y-04-30'));
-        $RecoveryEndDate   = $request->input('recoveryenddate', date('Y-06-30'));
-
-        $data        = [];
-        $checkFollow = [];
-        $doctorName  = DB::connection('SSB')->table("HNDOCTOR_MASTER")->get();
-        $clinicName  = DB::connection('SSB')->table("DNSYSCONFIG")->where('CtrlCode', '42203')->get();
-
-        $clinic = ['1500', '1502'];
-        $icd    = ['F32.0', 'F32.1', 'F32.2', 'F32.3', 'F32.4', 'F32.6', 'F32.7', 'F32.8', 'F32.9'];
-        $visits = DB::connection('SSB')
-            ->table('HNOPD_MASTER')
-            ->join('HNOPD_PRESCRIP', function ($join) {
-                $join->on('HNOPD_MASTER.VisitDate', '=', 'HNOPD_PRESCRIP.VisitDate')
-                    ->on('HNOPD_MASTER.VN', '=', 'HNOPD_PRESCRIP.VN');
-            })
-            ->join('HNOPD_PRESCRIP_DIAG', function ($join) {
-                $join->on('HNOPD_MASTER.VisitDate', '=', 'HNOPD_PRESCRIP_DIAG.VisitDate')
-                    ->on('HNOPD_MASTER.VN', '=', 'HNOPD_PRESCRIP_DIAG.VN');
-            })
-            ->join('HNPAT_NAME', function ($join) {
-                $join->on('HNOPD_MASTER.HN', '=', 'HNPAT_NAME.HN')
-                    ->where('HNPAT_NAME.SuffixSmall', 0);
-            })
-            ->whereDate('HNOPD_MASTER.VisitDate', '>=', $startDate)
-            ->whereDate('HNOPD_MASTER.VisitDate', '<=', $endDate)
-            ->where('HNOPD_PRESCRIP.CloseVisitCode', '<>', 99)
-            ->whereIn('HNOPD_PRESCRIP.Clinic', $clinic)
-            ->whereIn('HNOPD_PRESCRIP.NewToHere', [1, 2])
-            ->whereIn('HNOPD_PRESCRIP_DIAG.ICDCode', $icd)
-            ->orderBy('HNOPD_MASTER.VisitDate', 'ASC')
-            ->get();
-        $hnNew = [];
-        foreach ($visits as $item) {
-            if (! in_array($item->HN, $hnNew)) {
-                $hnNew[]     = $item->HN;
-                $data['1'][] = [
-                    'visit'  => $this->SetDate($item->VisitDate, 'd F Y'),
-                    'hn'     => $item->HN,
-                    'name'   => $this->FullName($item->FirstName, $item->LastName),
-                    'clinic' => $this->ClinicName($clinicName, $item->Clinic),
-                    'doctor' => $this->DoctorName($doctorName, $item->Doctor),
-                ];
-
-                $appointments = DB::connection('SSB')
-                    ->table('HNAPPMNT_HEADER')
-                    ->leftjoin('HNAPPMNT_LOG', 'HNAPPMNT_HEADER.AppointmentNo', 'HNAPPMNT_LOG.AppointmentNo')
-                    ->join('HNPAT_NAME', function ($join) {
-                        $join->on('HNAPPMNT_HEADER.HN', '=', 'HNPAT_NAME.HN')
-                            ->where('HNPAT_NAME.SuffixSmall', 0);
-                    })
-                    ->where('HNAPPMNT_HEADER.HN', $item->HN)
-                    ->whereDate('HNAPPMNT_HEADER.AppointDateTime', '>=', $item->VisitDate)
-                    ->whereDate('HNAPPMNT_HEADER.AppointDateTime', '<=', date('Y-m-d'))
-                    ->whereIn('HNAPPMNT_HEADER.Clinic', $clinic)
-                    ->whereIn('HNAPPMNT_LOG.HNAppointmentLogType', [1, 4, 12])
-                    ->select(
-                        'HNAPPMNT_HEADER.AppointDateTime',
-                        'HNAPPMNT_HEADER.AppointmentNo',
-                        'HNAPPMNT_LOG.HNAppointmentLogType',
-                    )
-                    ->orderBy('HNAPPMNT_HEADER.AppointDateTime', 'ASC')
-                    ->get();
-
-                if (count($appointments) > 0) {
-                    foreach ($appointments as $app) {
-                        $checkFollow[$item->HN]['name']                             = $this->FullName($item->FirstName, $item->LastName);
-                        $checkFollow[$item->HN]['app'][$app->AppointmentNo]['date'] = $this->SetDate($app->AppointDateTime, 'd F Y');
-                        if ($app->HNAppointmentLogType == 12) {
-                            $checkFollow[$item->HN]['app'][$app->AppointmentNo]['status'] = 'Attended';
-                        } else if ($app->HNAppointmentLogType == 4) {
-                            $checkFollow[$item->HN]['app'][$app->AppointmentNo]['status'] = 'Canceled';
-                        } else {
-                            $checkFollow[$item->HN]['app'][$app->AppointmentNo]['status'] = 'Loss';
-                        }
-                        $checkFollow[$item->HN]['app'][$app->AppointmentNo]['log'][] = [
-                            'log' => $app->HNAppointmentLogType,
-                        ];
-                    }
-                }
-            }
-        }
-        $visits = DB::connection('SSB')
-            ->table('HNOPD_MASTER')
-            ->join('HNOPD_PRESCRIP', function ($join) {
-                $join->on('HNOPD_MASTER.VisitDate', '=', 'HNOPD_PRESCRIP.VisitDate')
-                    ->on('HNOPD_MASTER.VN', '=', 'HNOPD_PRESCRIP.VN');
-            })
-            ->join('HNOPD_PRESCRIP_DIAG', function ($join) {
-                $join->on('HNOPD_MASTER.VisitDate', '=', 'HNOPD_PRESCRIP_DIAG.VisitDate')
-                    ->on('HNOPD_MASTER.VN', '=', 'HNOPD_PRESCRIP_DIAG.VN');
-            })
-            ->join('HNPAT_NAME', function ($join) {
-                $join->on('HNOPD_MASTER.HN', '=', 'HNPAT_NAME.HN')
-                    ->where('HNPAT_NAME.SuffixSmall', 0);
-            })
-            ->whereDate('HNOPD_MASTER.VisitDate', '>=', $RecoveryStartDate)
-            ->whereDate('HNOPD_MASTER.VisitDate', '<=', $RecoveryEndDate)
-            ->whereIn('HNOPD_MASTER.HN', $hnNew)
-            ->whereIn('HNOPD_PRESCRIP.Clinic', $clinic)
-            ->whereIn('HNOPD_PRESCRIP_DIAG.ICDCode', ['F32.5'])
-            ->orderBy('HNOPD_MASTER.VisitDate', 'ASC')
-            ->get();
-
-        foreach ($visits as $item) {
-            $data['2'][] = [
-                'visit'  => $this->SetDate($item->VisitDate, 'd F Y'),
-                'hn'     => $item->HN,
-                'name'   => $this->FullName($item->FirstName, $item->LastName),
-                'clinic' => $this->ClinicName($clinicName, $item->Clinic),
-                'doctor' => $this->DoctorName($doctorName, $item->Doctor),
-            ];
-        }
-
-        $date = [
-            'date_1_form' => $this->setFullDate($startDate),
-            'date_1_to'   => $this->setFullDate($endDate),
-            'date_2_form' => $this->setFullDate($RecoveryStartDate),
-            'date_2_to'   => $this->setFullDate($RecoveryEndDate),
-        ];
-
-        return view('depression')->with(compact('data', 'date', 'checkFollow'));
-    }
-
-    // Sub Function
-    public function FullName($first, $last)
-    {
-        mb_internal_encoding('UTF-8');
-        $setname = mb_substr($first, 1);
-        $setlast = mb_substr($last, 1);
-        if (str_contains($setname, '\\')) {
-            $setname = explode("\\", $setname);
-            $setname = $setname[0];
-        }
-        $name = $setname . " " . $setlast;
-
-        return $name;
-    }
-    public function setAgeInterger($birthDate)
-    {
-        $now      = new DateTime();
-        $date     = new DateTime($birthDate);
-        $interval = $now->diff($date);
-        $year     = round($interval->y . '.' . $interval->m, 0);
-
-        return $year;
-    }
-    public function setAge($dateInput)
-    {
-        $date     = new DateTime($dateInput);
-        $now      = new DateTime();
-        $interval = $now->diff($date);
-        $output   = $interval->y . ' Y ' . $interval->m . ' M ' . $interval->d . ' D';
-
-        return $output;
-    }
-    public function DoctorName($data, $code)
-    {
-        $doctor = collect($data)->where('Doctor', $code)->first();
-        if ($doctor !== null) {
-            mb_internal_encoding('UTF-8');
-            $name = mb_substr($doctor->LocalName, 1);
-            if (str_contains($name, '\\')) {
-                $temp = explode("\\", $name);
-                $name = $temp[1] . $temp[0];
-            }
-        } else {
-            $name = null;
-        }
-
-        return $name;
-    }
-    public function ClinicName($data, $code)
-    {
-        $clinic = collect($data)->where('Code', $code)->first();
-        if ($clinic !== null) {
-            mb_internal_encoding('UTF-8');
-            $name = mb_substr($clinic->LocalName, 1);
-        }
-        return $name;
-    }
-    public function SetDate($date, $format)
-    {
-        // https://www.php.net/manual/en/datetime.format.php
-        $date = strtotime($date);
-
-        return date($format, $date);
-    }
-    public function setFullDate($dateInput)
-    {
-        $nation = 'THA';
-        $date   = explode('-', $dateInput);
-        $month  = $date[1];
-        if ($nation == 'THA') {
-            $year   = $date[0] + 543;
-            $months = [
-                "01" => "มกราคม",
-                "02" => "กุมภาพันธ์",
-                "03" => "มีนาคม",
-                "04" => "เมษายน",
-                "05" => "พฤษภาคม",
-                "06" => "มิถุนายน",
-                "07" => "กรกฎาคม",
-                "08" => "สิงหาคม",
-                "09" => "กันยายน",
-                "10" => "ตุลาคม",
-                "11" => "พฤศจิกายน",
-                "12" => "ธันวาคม",
-            ];
-            $fullmonth = $months[$month] ?? '';
-        } else {
-            $year   = $date[0];
-            $months = [
-                "01" => "January",
-                "02" => "February",
-                "03" => "March",
-                "04" => "April",
-                "05" => "May",
-                "06" => "June",
-                "07" => "July",
-                "08" => "August",
-                "09" => "September",
-                "10" => "October",
-                "11" => "November",
-                "12" => "December",
-            ];
-            $fullmonth = $months[$month] ?? '';
-        }
-        $date = substr($date[2], 0, 2) . " " . $fullmonth . " " . $year;
-
-        return $date;
-    }
 
     public function excelImport()
     {

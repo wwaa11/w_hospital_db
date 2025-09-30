@@ -17,7 +17,30 @@ class K2Controller extends Controller
 
     public function deleteProcedure()
     {
+        dump('Inactive Procedure');
+        // $server = 'K2PROD_SUR';
+        $server = 'K2DEV_SUR';
+        // die();
+        $count = DB::connection($server)->table('m_Procedure')->update([
+            'Status' => 'Inactive',
+        ]);
+        DB::connection($server)->table('m_MedicalSuppliesInOper')->update([
+            'Status' => 'Inactive',
+        ]);
+        dump('Inactive Procedure Success ' . $count . ' rows updated');
+    }
 
+    public function deleteMed3()
+    {
+        dump('Inactive Med3');
+        // $server = 'K2PROD_SUR';
+        $server = 'K2DEV_SUR';
+        die();
+
+        $count = DB::connection($server)->table('m_MedicalSupplies3')->update([
+            'Status' => 'Inactive',
+        ]);
+        dump('Inactive Med3 Success ' . $count . ' rows updated');
     }
 
     public function Procedure(Request $request)
@@ -79,8 +102,11 @@ class K2Controller extends Controller
                 Excel::import(new Med3($clinic, $environment), $file);
             }
             $clinicText = count($clinics) === 1 ? $clinics[0] : 'selected clinics';
+
             return redirect()->back()->with('success', "Med3 data has been successfully uploaded to {$clinicText} in " . ($environment === 'K2DEV_SUR' ? 'Development' : 'Production') . " environment.");
         } catch (\Exception $e) {
+            dd($e->getMessage());
+
             return redirect()->back()->with('error', 'Error uploading file: ' . $e->getMessage());
         }
     }
