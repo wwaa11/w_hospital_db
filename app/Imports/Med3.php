@@ -45,9 +45,8 @@ class Med3 implements ToCollection
     {
         mb_internal_encoding("UTF-8");
         $clinic = $this->clinic;
-
         foreach ($rows as $rowIndex => $row) {
-            if ($rowIndex >= 2 && $row[0] !== null) {
+            if ($rowIndex >= 3 && $row[0] !== null) {
                 // Skip if Name & Code is empty
                 if ($row[2] == null && $row[3] == null) {
                     $this->logger->skipMed3($this->clinic, $this->environment, [
@@ -72,18 +71,6 @@ class Med3 implements ToCollection
                 $priceArab  = $row[7] == null ? 0 : $row[7];
                 $supplier   = $row[0];
 
-                // Find Duplicate
-                $existingRecord = DB::connection($this->environment)->table('m_MedicalSupplies3')
-                    ->where('ClinicShortName', $clinic)
-                    ->where('Code', $code)
-                    ->where('Name', $name)
-                    ->where('Supplier', $supplier)
-                    ->where('Status', 'Active')
-                    ->first();
-                if ($existingRecord) {
-                    continue; // Skip if duplicate found
-                }
-
                 $arrayPriceInsert   = [];
                 $medsuppilesThai    = $this->medSuppiles3Array('Thai', $code, $name, $type, $uom, $priceTH, $supplier, $clinic);
                 $arrayPriceInsert[] = $medsuppilesThai;
@@ -94,19 +81,67 @@ class Med3 implements ToCollection
                 $medsuppilesArab    = $this->medSuppiles3Array('Arab', $code, $name, $type, $uom, $priceArab, $supplier, $clinic);
                 $arrayPriceInsert[] = $medsuppilesArab;
 
-                DB::connection($this->environment)->table('m_MedicalSupplies3')->Insert($arrayPriceInsert);
+                // Find Duplicate
+                $existingRecord = DB::connection($this->environment)->table('m_MedicalSupplies3')
+                    ->where('ClinicShortName', $clinic)
+                    ->where('Code', $code)
+                    ->where('Name', $name)
+                    ->where('Supplier', $supplier)
+                    ->where('Status', 'Active')
+                    ->first();
+                if ($existingRecord) {
+                    $updateThai = DB::connection($this->environment)->table('m_MedicalSupplies3')
+                        ->where('ClinicShortName', $clinic)
+                        ->where('Code', $code)
+                        ->where('Name', $name)
+                        ->where('Supplier', $supplier)
+                        ->where('Status', 'Active')
+                        ->where('Nationality', 'Thai')
+                        ->update($medsuppilesThai);
+                    $updateInter = DB::connection($this->environment)->table('m_MedicalSupplies3')
+                        ->where('ClinicShortName', $clinic)
+                        ->where('Code', $code)
+                        ->where('Name', $name)
+                        ->where('Supplier', $supplier)
+                        ->where('Status', 'Active')
+                        ->where('Nationality', 'Inter')
+                        ->update($medsuppilesInter);
+                    $updateArab = DB::connection($this->environment)->table('m_MedicalSupplies3')
+                        ->where('ClinicShortName', $clinic)
+                        ->where('Code', $code)
+                        ->where('Name', $name)
+                        ->where('Supplier', $supplier)
+                        ->where('Status', 'Active')
+                        ->where('Nationality', 'Arab')
+                        ->update($medsuppilesArab);
 
-                // Log the data after insertion
-                $this->logger->logMed3($this->clinic, $this->environment, [
-                    'supplier'      => $supplier,
-                    'equipmentType' => $type,
-                    'name'          => $name,
-                    'code'          => $code,
-                    'uom'           => $uom,
-                    'thai'          => $priceTH,
-                    'inter'         => $priceInter,
-                    'arab'          => $priceArab,
-                ]);
+                    // Log update
+                    $this->logger->logMed3($this->clinic, $this->environment, [
+                        'type'          => 'Update',
+                        'supplier'      => $supplier,
+                        'equipmentType' => $type,
+                        'name'          => $name,
+                        'code'          => $code,
+                        'uom'           => $uom,
+                        'thai'          => $priceTH,
+                        'inter'         => $priceInter,
+                        'arab'          => $priceArab,
+                    ]);
+                } else {
+                    DB::connection($this->environment)->table('m_MedicalSupplies3')->Insert($arrayPriceInsert);
+                    // Log insert
+                    $this->logger->logMed3($this->clinic, $this->environment, [
+                        'type'          => 'Insert',
+                        'supplier'      => $supplier,
+                        'equipmentType' => $type,
+                        'name'          => $name,
+                        'code'          => $code,
+                        'uom'           => $uom,
+                        'thai'          => $priceTH,
+                        'inter'         => $priceInter,
+                        'arab'          => $priceArab,
+                    ]);
+                }
             }
         }
 

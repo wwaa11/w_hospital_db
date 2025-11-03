@@ -35,35 +35,17 @@
                             <div class="mb-3 flex items-center justify-between">
                                 <h6 class="text-lg font-semibold text-gray-700">
                                     <i class="fas fa-table mr-2"></i>
-                                    Example Excel Format <span class="text-xs text-red-500">*skip first 3 rows</span>
+                                    Example Excel Format <span class="text-xs text-red-500">*skip first row</span>
                                 </h6>
-                                <a class="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" href="{{ asset("K2_Example/Med3_Example.xlsx") }}">
-                                    <i class="fas fa-download mr-2"></i>
-                                    Download Example File
-                                </a>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="min-w-full border border-gray-200">
                                     <thead>
                                         <tr class="bg-gray-50">
-                                            <td class="border-b px-4 py-2 text-sm font-semibold text-gray-700" colspan="8">
-                                                Price List
-                                            </td>
-                                        </tr>
-                                        <tr class="bg-gray-50">
-                                            <td class="border-b px-4 py-2 text-sm font-semibold text-gray-700" colspan="8">
-                                                Detail
-                                            </td>
-                                        </tr>
-                                        <tr class="bg-gray-50">
                                             <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700">Supplier</th>
                                             <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700">EquipmentType</th>
                                             <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700">Name</th>
                                             <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700">Code</th>
-                                            <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700">UOM</th>
-                                            <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700">THAI</th>
-                                            <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700">INTER</th>
-                                            <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700">ARAB</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200 bg-white">
@@ -72,30 +54,18 @@
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">Spray Set for Coseal</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">Coseal Spray Set</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">23283747</td>
-                                            <td class="border-b px-4 py-2 text-sm text-gray-700">ชิ้น</td>
-                                            <td class="border-b px-4 py-2 text-center text-sm text-gray-700">1,124.00</td>
-                                            <td class="border-b px-4 py-2 text-center text-sm text-gray-700">1,445.00</td>
-                                            <td class="border-b px-4 py-2 text-center text-sm text-gray-700">1,766.00</td>
                                         </tr>
                                         <tr>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">Example</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">Surgical Sealant</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">Coseal Surgical Sealant 2ML</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">23283744</td>
-                                            <td class="border-b px-4 py-2 text-sm text-gray-700">กล่อง</td>
-                                            <td class="border-b px-4 py-2 text-center text-sm text-gray-700">12,707.00</td>
-                                            <td class="border-b px-4 py-2 text-center text-sm text-gray-700">16,773.00</td>
-                                            <td class="border-b px-4 py-2 text-center text-sm text-gray-700">20,330.00</td>
                                         </tr>
                                         <tr>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">Example</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">Surgical Sealant</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">Coseal Surgical Sealant 4ML</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">23283749</td>
-                                            <td class="border-b px-4 py-2 text-sm text-gray-700">กล่อง</td>
-                                            <td class="border-b px-4 py-2 text-center text-sm text-gray-700">20,063.00</td>
-                                            <td class="border-b px-4 py-2 text-center text-sm text-gray-700">26,483.00</td>
-                                            <td class="border-b px-4 py-2 text-center text-sm text-gray-700">32,100.00</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -106,7 +76,7 @@
                             </p>
                         </div>
 
-                        <form class="needs-validation" method="POST" action="{{ env("APP_URL") }}/k2/med3" enctype="multipart/form-data" novalidate>
+                        <form class="needs-validation" method="POST" action="{{ route("k2.uploadMed3DeactivateFile") }}" enctype="multipart/form-data" novalidate>
                             @csrf
                             <div class="mb-6">
                                 <label class="mb-2 block text-sm font-medium text-gray-700">

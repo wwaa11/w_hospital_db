@@ -58,8 +58,6 @@ class K2Logger
 
     protected function writeLog($logData)
     {
-        $logEntry = json_encode($logData, JSON_PRETTY_PRINT) . "\n";
-
-        Log::channel('k2')->info($logEntry);
+        Log::channel('k2')->info($logData);
     }
 }

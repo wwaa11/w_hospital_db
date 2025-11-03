@@ -9,17 +9,84 @@ use Illuminate\Support\Facades\Storage;
 
 class CoreController extends Controller
 {
+    public function __construct()
+    {
+        mb_internal_encoding('UTF-8');
+    }
     public function index()
     {
 
         return view('layouts.index');
     }
 
+    public function lastLabXrayHN()
+    {
+        $labHeader = DB::connection('SSB')->table("HNLABREQ_HEADER")
+        // ->join('HNLABREQ_RESULT', 'HNLABREQ_HEADER.RequestNo', 'HNLABREQ_RESULT.RequestNo')
+            ->where('HN', 'like', '%-%')
+        // ->where('HN', '867848')
+            ->whereNull('CxlDateTime')
+            ->select(
+                'HNLABREQ_HEADER.HN',
+                'HNLABREQ_HEADER.RequestNo as labRequestNo',
+                'HNLABREQ_HEADER.EntryDateTime as labEntryDateTime',
+                'HNLABREQ_HEADER.FacilityRmsNo as labFacilityRmsNo',
+                DB::raw("'lab' as type")
+            )
+            ->orderBy('HNLABREQ_HEADER.HN', 'ASC')
+            ->orderBy('HNLABREQ_HEADER.EntryDateTime', 'ASC')
+            ->get();
+        $xrayHeader = DB::connection('SSB')->table("HNXRAYREQ_HEADER")
+        // ->join('HNXRAYREQ_RESULT', 'HNXRAYREQ_HEADER.RequestNo', 'HNXRAYREQ_RESULT.RequestNo')
+            ->where('HN', 'like', '%-%')
+        // ->where('HN', '867848')
+            ->whereNull('CxlDateTime')
+            ->select(
+                'HNXRAYREQ_HEADER.HN',
+                'HNXRAYREQ_HEADER.RequestNo as xrayRequestNo',
+                'HNXRAYREQ_HEADER.EntryDateTime as xrayEntryDateTime',
+                'HNXRAYREQ_HEADER.FacilityRmsNo as xrayFacilityRmsNo',
+                DB::raw("'xray' as type")
+            )
+            ->orderBy('HNXRAYREQ_HEADER.HN', 'ASC')
+            ->orderBy('HNXRAYREQ_HEADER.EntryDateTime', 'ASC')
+            ->get();
+
+        $alldata = $labHeader->merge($xrayHeader);
+        $datas   = [];
+        foreach ($alldata as $item) {
+            if (! isset($datas[$item->HN])) {
+                $datas[$item->HN] = [
+                    'HN'                => $item->HN,
+                    'labRequestNo'      => null,
+                    'labEntryDateTime'  => null,
+                    'labFacilityRmsNo'  => null,
+                    'xrayRequestNo'     => null,
+                    'xrayEntryDateTime' => null,
+                    'xrayFacilityRmsNo' => null,
+                ];
+            }
+            if ($item->type == 'lab') {
+                $datas[$item->HN]['labRequestNo']     = $item->labRequestNo;
+                $datas[$item->HN]['labEntryDateTime'] = $item->labEntryDateTime;
+                $datas[$item->HN]['labFacilityRmsNo'] = $item->labFacilityRmsNo;
+            }
+            if ($item->type == 'xray') {
+                $datas[$item->HN]['xrayRequestNo']     = $item->xrayRequestNo;
+                $datas[$item->HN]['xrayEntryDateTime'] = $item->xrayEntryDateTime;
+                $datas[$item->HN]['xrayFacilityRmsNo'] = $item->xrayFacilityRmsNo;
+            }
+        }
+
+        return view('lastLABXRAY', compact('datas'));
+    }
+
     public function AppmntQuery()
     {
         $data = DB::connection('SSB')->table("HNAPPMNT_HEADER")
             ->leftJoin('HNAPPMNT_MSG', 'HNAPPMNT_HEADER.AppointmentNo', 'HNAPPMNT_MSG.AppointmentNo')
-            ->whereDate('HNAPPMNT_HEADER.AppointDateTime', '>=', '2025-09-26')
+            ->whereDate('HNAPPMNT_HEADER.AppointDateTime', '>=', '2025-11-01')
+            ->whereDate('HNAPPMNT_HEADER.AppointDateTime', '<=', '2026-01-31')
             ->whereNull('CxlReasonCode')
             ->where('HNAPPMNT_HEADER.HN', 'like', '%-%')
             ->select(
@@ -35,13 +102,39 @@ class CoreController extends Controller
             ->orderBy('HNAPPMNT_HEADER.HN', 'ASC')
             ->orderBy('HNAPPMNT_HEADER.AppointDateTime', 'ASC')
             ->get();
+
+        $hns   = $data->pluck('HN')->unique();
+        $names = DB::connection('SSB')->table("HNPAT_NAME")
+            ->whereIn('HN', $hns)
+            ->select(
+                'HN',
+                'InitialNameCode',
+                'FirstName',
+                'LastName',
+            )
+            ->where('SuffixSmall', 0)
+            ->get();
+
+        $initials = DB::connection('SSB')->table("DNSYSCONFIG")
+            ->where('CtrlCode', '10241')
+            ->get();
+
+        foreach ($initials as $item) {
+            $initialsArray[$item->Code] = mb_substr($item->LocalName, 1);
+        }
+
         $addAPP    = [];
         $dataArray = [];
+
         foreach ($data as $item) {
             if (! in_array($item->AppointmentNo, $addAPP)) {
+                $name    = $names->where('HN', $item->HN)->first();
                 $dataArr = [
                     'AppointmentNo'            => $item->AppointmentNo,
                     'HN'                       => $item->HN,
+                    'Initials'                 => ($name->InitialNameCode ? $initialsArray[$name->InitialNameCode] : null),
+                    'FirstName'                => mb_substr($name->FirstName, 1),
+                    'LastName'                 => mb_substr($name->LastName, 1),
                     'Doctor'                   => $item->Doctor,
                     'Clinic'                   => $item->Clinic,
                     'MobilePhone'              => $item->MobilePhone,

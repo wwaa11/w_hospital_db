@@ -9,6 +9,9 @@
         <tr>
             <td class="border-collapse border p-3 text-center">AppointmentNo</td>
             <td class="border-collapse border p-3 text-center">HN</td>
+            <td class="border-collapse border p-3 text-center">Initials</td>
+            <td class="border-collapse border p-3 text-center">FirstName</td>
+            <td class="border-collapse border p-3 text-center">LastName</td>
             <td class="border-collapse border p-3 text-center">Doctor</td>
             <td class="border-collapse border p-3 text-center">Clinic</td>
             <td class="border-collapse border p-3 text-center">MobilePhone</td>
@@ -20,6 +23,9 @@
             <tr>
                 <td class="border-collapse border text-center">{{ $appmnt["AppointmentNo"] }}</td>
                 <td class="border-collapse border text-center">{{ $appmnt["HN"] }}</td>
+                <td class="border-collapse border text-center">{{ $appmnt["Initials"] }}</td>
+                <td class="border-collapse border text-center">{{ $appmnt["FirstName"] }}</td>
+                <td class="border-collapse border text-center">{{ $appmnt["LastName"] }}</td>
                 <td class="border-collapse border text-center">{{ $appmnt["Doctor"] }}</td>
                 <td class="border-collapse border text-center">{{ $appmnt["Clinic"] }}</td>
                 <td class="border-collapse border text-center">{{ $appmnt["MobilePhone"] }}</td>

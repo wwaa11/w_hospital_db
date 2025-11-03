@@ -130,12 +130,13 @@ return [
         'k2'         => [
             'driver'               => 'daily',
             'path'                 => storage_path('logs/k2.log'),
-            'level'                => env('LOG_LEVEL', 'debug'),
+            'level'                => 'info',
             'days'                 => 365,
             'replace_placeholders' => true,
             'formatter'            => Monolog\Formatter\JsonFormatter::class,
             'formatter_with'       => [
-                'jsonFlags' => JSON_UNESCAPED_UNICODE,
+                'jsonFlags'                  => JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION,
+                'ignoreEmptyContextAndExtra' => true,
             ],
         ],
 
