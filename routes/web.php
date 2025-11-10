@@ -9,6 +9,8 @@ Route::get('/test', [CoreController::class, 'lastLabXrayHN'])->name('index');
 // QUERY
 Route::get('/', [CoreController::class, 'index'])->name('index');
 Route::get('/depression', [QueryController::class, 'Depression'])->name('depression.index');
+Route::get('/apppercent', [CoreController::class, 'appPercentOnline'])->name('apppercent.index');
+
 // Dev
 Route::get('/appmnt', [CoreController::class, 'AppmntQuery']);
 Route::get('/gdpa', [CoreController::class, 'getDoctorPatientAppointment']);

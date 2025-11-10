@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\HelperController;
+use Carbon\Carbon;
 use DB;
 use File;
 use Illuminate\Http\Request;
@@ -19,11 +20,105 @@ class CoreController extends Controller
         return view('layouts.index');
     }
 
+    public function generateMonthlyDateBatches(string $startDate, string $endDate): array
+    {
+        // Convert strings to Carbon objects for easy manipulation
+        $start   = Carbon::parse($startDate)->startOfMonth();
+        $end     = Carbon::parse($endDate);
+        $batches = [];
+        // Loop while the current month is before or the same as the target end month
+        while ($start->lessThanOrEqualTo($end)) {
+            $currentMonth = $start->clone();
+            // Start date is the 1st of the current month
+            $startOfMonth = $currentMonth->format('Y-m-d');
+            // End date is the last day of the current month
+            $endOfMonth = $currentMonth->endOfMonth()->format('Y-m-d');
+            $batches[]  = [
+                $startOfMonth,
+                $endOfMonth,
+            ];
+            // Move the pointer to the 1st day of the next month for the next iteration
+            $start->addMonth()->startOfMonth();
+        }
+
+        return $batches;
+    }
+
+    public function appPercentOnline()
+    {
+        $startDate      = '2022-11-01';
+        $endDate        = '2025-12-31';
+        $monthlyBatches = $this->generateMonthlyDateBatches($startDate, $endDate);
+
+        $data = [];
+        foreach ($monthlyBatches as $b) {
+            $start = $b[0];
+            $end   = $b[1];
+
+            $apps = DB::connection('SSB')
+                ->table("HNAPPMNT_HEADER")
+                ->leftJoin('HNAPPMNT_LOG', 'HNAPPMNT_HEADER.AppointmentNo', 'HNAPPMNT_LOG.AppointmentNo')
+                ->whereNull('CxlReasonCode')
+                ->where('AppointDateTime', '>=', $start)
+                ->where('AppointDateTime', '<=', $end)
+                ->orderBy('HNAPPMNT_HEADER.AppointDateTime', 'ASC')
+                ->whereIn('HNAPPMNT_LOG.HNAppointmentLogType', ['1', '12'])
+                ->select(
+                    'HNAPPMNT_HEADER.HN',
+                    'HNAPPMNT_HEADER.AppointmentNo',
+                    'HNAPPMNT_HEADER.AppointDateTime as apptDateTime',
+                    'HNAPPMNT_LOG.HNAppointmentLogType'
+                )
+                ->get();
+
+            $data[$start] = [
+                'ssb'           => 0,
+                'ssb-create'    => 0,
+                'ssb-attend'    => 0,
+                'online'        => 0,
+                'online-create' => 0,
+                'online-attend' => 0,
+            ];
+            $countAPP = [];
+            foreach ($apps as $app) {
+                $type = (substr($app->AppointmentNo, 0, 2) == 'AP') ? 'ssb' : 'online';
+
+                if (! in_array($app->AppointmentNo, $countAPP)) {
+                    $countAPP[] = $app->AppointmentNo;
+                    $data[$start][$type]++;
+                }
+
+                if ($app->HNAppointmentLogType == '1') {
+                    $data[$start][$type . '-create']++;
+                } else {
+                    $data[$start][$type . '-attend']++;
+                }
+            }
+
+            foreach ($data as $date => &$metrics) {
+                $total                            = $metrics['ssb'] + $metrics['online'];
+                $metrics['total']                 = $total;
+                $metrics['ssb-percent']           = $total > 0 ? number_format(($metrics['ssb'] / $total) * 100, 2) . '%' : 'N/A (Div by zero)';
+                $metrics['ssb-miss']              = $metrics['ssb'] - $metrics['ssb-attend'];
+                $metrics['ssb-miss-percent']      = $total > 0 ? number_format(($metrics['ssb-miss'] / $total) * 100, 2) . '%' : 'N/A (Div by zero)';
+                $metrics['online-percent']        = $total > 0 ? number_format(($metrics['online'] / $total) * 100, 2) . '%' : 'N/A (Div by zero)';
+                $metrics['online-miss']           = $metrics['online'] - $metrics['online-attend'];
+                $metrics['online-miss-percent']   = $total > 0 ? number_format(($metrics['online-miss'] / $total) * 100, 2) . '%' : 'N/A (Div by zero)';
+                $metrics['ssb-attend-percent']    = $total > 0 ? number_format(($metrics['ssb-attend'] / $total) * 100, 2) . '%' : 'N/A (Div by zero)';
+                $metrics['online-attend-percent'] = $total > 0 ? number_format(($metrics['online-attend'] / $total) * 100, 2) . '%' : 'N/A (Div by zero)';
+            }
+        }
+
+        return view('Query.appointment-percentage', compact('data'));
+    }
+
     public function lastLabXrayHN()
     {
         $labHeader = DB::connection('SSB')->table("HNLABREQ_HEADER")
         // ->join('HNLABREQ_RESULT', 'HNLABREQ_HEADER.RequestNo', 'HNLABREQ_RESULT.RequestNo')
-            ->where('HN', 'like', '%-%')
+        // ->where('HN', 'like', '%-%')
+            ->whereRaw('LEN(HN) = 7')->whereRaw("HN NOT LIKE '%[^0-9]%'")
+
         // ->where('HN', '867848')
             ->whereNull('CxlDateTime')
             ->select(
@@ -38,7 +133,8 @@ class CoreController extends Controller
             ->get();
         $xrayHeader = DB::connection('SSB')->table("HNXRAYREQ_HEADER")
         // ->join('HNXRAYREQ_RESULT', 'HNXRAYREQ_HEADER.RequestNo', 'HNXRAYREQ_RESULT.RequestNo')
-            ->where('HN', 'like', '%-%')
+        // ->where('HN', 'like', '%-%')
+            ->whereRaw('LEN(HN) = 7')->whereRaw("HN NOT LIKE '%[^0-9]%'")
         // ->where('HN', '867848')
             ->whereNull('CxlDateTime')
             ->select(
