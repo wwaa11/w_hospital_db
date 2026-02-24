@@ -16,23 +16,6 @@ class K2Controller extends Controller
         return view('k2.index');
     }
 
-    public function recovery()
-    {
-        $server = 'K2DEV_SUR';
-        $clinic = ['ORT', 'OBS'];
-
-        // $procedure = DB::connection($server)->table('m_Procedure')->whereIN('ClinicShortName', $clinic)->get();
-        // foreach ($procedure as $key => $value) {
-        //     $find = DB::connection($server)->table('m_MedicalSuppliesInOper')->where('ProcedureID', $value->ID)->update(['Status' => 'Active']);
-        // }
-        // $procedure = DB::connection($server)->table('m_Procedure')->whereIN('ClinicShortName', $clinic)->update(['Status' => 'Active']);
-
-        // $count = DB::connection($server)->table('m_MedicalSupplies3')->whereIn('ClinicShortName', $clinic)->update([
-        //     'Status' => 'Active',
-        // ]);
-        // dump('Recovery Med3 Success ' . $count . ' rows updated');
-
-    }
 
     public function deleteProcedure()
     {

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Imports;
 
 use App\Services\K2Logger;
@@ -9,14 +10,16 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 class Procedure implements ToCollection
 {
     protected $clinic;
+
     protected $environment;
+
     protected $logger;
 
     public function __construct($clinic, $environment = 'K2DEV_SUR')
     {
-        $this->clinic      = $clinic;
+        $this->clinic = $clinic;
         $this->environment = $environment;
-        $this->logger      = new K2Logger();
+        $this->logger = new K2Logger;
     }
 
     public function medSuppilesArray($id, $price, $national, $setting)
@@ -35,38 +38,38 @@ class Procedure implements ToCollection
                 // Calculate the new price using the formula
                 $finalPrice = $priceMin + ($priceMax - $priceMin) * 0.8;
             } else {
-                                 // Handle cases where the hyphenated format is unexpected
-                                 // For now, we'll set price to 0 or handle as an error
+                // Handle cases where the hyphenated format is unexpected
+                // For now, we'll set price to 0 or handle as an error
                 $finalPrice = 0; // Or throw an exception, log an error, etc.
-                                 // You might want to add logging here to see which price caused this issue
-                                 // \Log::warning("Unexpected price format with hyphen: " . $price);
+                // You might want to add logging here to see which price caused this issue
+                // \Log::warning("Unexpected price format with hyphen: " . $price);
             }
         } else {
             $finalPrice = is_numeric($cleanedPrice) ? (float) $cleanedPrice : 0;
         }
 
-        $name         = $setting['name'];
+        $name = $setting['name'];
         $pricePercent = $finalPrice / 100;
-        $medicine     = $setting['med_percent'];
-        $suppiles     = $setting['supplies_percent'];
-        $equipment    = $setting['equipment_percent'];
-        $dateTime     = date('Y-m-d H:i:s');
+        $medicine = $setting['med_percent'];
+        $suppiles = $setting['supplies_percent'];
+        $equipment = $setting['equipment_percent'];
+        $dateTime = date('Y-m-d H:i:s');
 
         $medsuppilesArray = [
-            "ProcedureID"          => $id,
-            "Nationality"          => $national,
-            "Total"                => $finalPrice,
-            "Medicine"             => $medicine,
-            "MedicalSupplies1"     => $suppiles,
-            "Equipment"            => $equipment,
-            "CreateDate"           => $dateTime,
-            "CreateBy"             => $name,
-            "UpdateDate"           => $dateTime,
-            "UpdateBy"             => $name,
-            "MedicineCost"         => $pricePercent * $medicine,
-            "MedicalSupplies1Cost" => $pricePercent * $suppiles,
-            "EquipmentCost"        => $pricePercent * $equipment,
-            "Status"               => "Active",
+            'ProcedureID' => $id,
+            'Nationality' => $national,
+            'Total' => $finalPrice,
+            'Medicine' => $medicine,
+            'MedicalSupplies1' => $suppiles,
+            'Equipment' => $equipment,
+            'CreateDate' => $dateTime,
+            'CreateBy' => $name,
+            'UpdateDate' => $dateTime,
+            'UpdateBy' => $name,
+            'MedicineCost' => $pricePercent * $medicine,
+            'MedicalSupplies1Cost' => $pricePercent * $suppiles,
+            'EquipmentCost' => $pricePercent * $equipment,
+            'Status' => 'Active',
         ];
 
         return $medsuppilesArray;
@@ -75,10 +78,10 @@ class Procedure implements ToCollection
     public function collection(Collection $rows)
     {
         $ProcedureSetting = [
-            'clinic'            => $this->clinic,
-            'name'              => auth()->user()->name_EN,
-            'med_percent'       => 5,
-            'supplies_percent'  => 35,
+            'clinic' => $this->clinic,
+            'name' => auth()->user()->name_EN,
+            'med_percent' => 5,
+            'supplies_percent' => 35,
             'equipment_percent' => 60,
         ];
 
@@ -86,7 +89,7 @@ class Procedure implements ToCollection
             if ($rowIndex >= 2 && $row[1] !== null) {
 
                 // Add search by ProcedureName
-                $procedureName     = $row[1];
+                $procedureName = $row[1];
                 $existingProcedure = DB::connection($this->environment)
                     ->table('m_Procedure')
                     ->where('ProcedureName', $procedureName)
@@ -95,37 +98,67 @@ class Procedure implements ToCollection
                     ->first();
 
                 if ($existingProcedure) {
-                    // Log the existing procedure
+                    $procedureID = $existingProcedure->ProcedureID;
+
+                    // Update Procedure Update Info
+                    DB::connection($this->environment)
+                        ->table('m_Procedure')
+                        ->where('ProcedureID', $procedureID)
+                        ->update([
+                            'UpdateDate' => date('Y-m-d H:i:s'),
+                            'UpdateBy' => $ProcedureSetting['name'],
+                        ]);
+
+                    // Calculate and update prices for each nationality
+                    $nationalities = [
+                        'Thai' => $row[2],
+                        'Inter' => $row[3],
+                        'Arab' => $row[4],
+                    ];
+
+                    foreach ($nationalities as $national => $price) {
+                        $updatedMedSuppiles = $this->medSuppilesArray($procedureID, $price, $national, $ProcedureSetting);
+
+                        DB::connection($this->environment)
+                            ->table('m_MedicalSuppliesInOper')
+                            ->where('ProcedureID', $procedureID)
+                            ->where('Nationality', $national)
+                            ->update($updatedMedSuppiles);
+                    }
+
+                    // Log the update
                     $this->logger->logProcedure($this->clinic, $this->environment, [
-                        'message'   => 'Procedure already exists',
-                        'procedure' => $existingProcedure,
+                        'message' => 'Procedure updated',
+                        'procedure' => (array) $existingProcedure,
+                        'row' => $row->toArray(),
                     ]);
-                    continue; // Skip to the next row
+
+                    continue; // Skip the insert logic below
                 }
 
                 $procedureArray = [
-                    "ICD9"            => "",
-                    "ProcedureName"   => $row[1],
-                    "CreateDate"      => date('Y-m-d H:i:s'),
-                    "CreateBy"        => $ProcedureSetting['name'],
-                    "UpdateDate"      => date('Y-m-d H:i:s'),
-                    "UpdateBy"        => $ProcedureSetting['name'],
-                    "Status"          => "Active",
-                    "ClinicShortName" => $ProcedureSetting['clinic'],
+                    'ICD9' => '',
+                    'ProcedureName' => $row[1],
+                    'CreateDate' => date('Y-m-d H:i:s'),
+                    'CreateBy' => $ProcedureSetting['name'],
+                    'UpdateDate' => date('Y-m-d H:i:s'),
+                    'UpdateBy' => $ProcedureSetting['name'],
+                    'Status' => 'Active',
+                    'ClinicShortName' => $ProcedureSetting['clinic'],
                 ];
 
                 $procedureID = DB::connection($this->environment)->table('m_Procedure')->InsertGetId($procedureArray);
 
                 $medsuppilesThai = $this->medSuppilesArray($procedureID, $row[2], 'Thai', $ProcedureSetting);
-                $medsuppiles[]   = $medsuppilesThai;
+                $medsuppiles[] = $medsuppilesThai;
 
                 $medsuppilesInter = $this->medSuppilesArray($procedureID, $row[3], 'Inter', $ProcedureSetting);
-                $medsuppiles[]    = $medsuppilesInter;
+                $medsuppiles[] = $medsuppilesInter;
 
                 $medsuppilesArab = $this->medSuppilesArray($procedureID, $row[4], 'Arab', $ProcedureSetting);
-                $medsuppiles[]   = $medsuppilesArab;
+                $medsuppiles[] = $medsuppilesArab;
 
-                $arrayPriceInsert   = [];
+                $arrayPriceInsert = [];
                 $arrayPriceInsert[] = $medsuppilesThai;
                 $arrayPriceInsert[] = $medsuppilesInter;
                 $arrayPriceInsert[] = $medsuppilesArab;
@@ -135,13 +168,12 @@ class Procedure implements ToCollection
                 // Log the data after insertion
                 $this->logger->logProcedure($this->clinic, $this->environment, [
                     'procedure' => $procedureArray,
-                    'thai'      => $medsuppilesThai,
-                    'inter'     => $medsuppilesInter,
-                    'arab'      => $medsuppilesArab,
+                    'thai' => $medsuppilesThai,
+                    'inter' => $medsuppilesInter,
+                    'arab' => $medsuppilesArab,
                 ]);
             }
         }
 
-        return;
     }
 }

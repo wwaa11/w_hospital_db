@@ -6,13 +6,9 @@
             <thead class="bg-blue-100">
                 <tr>
                     <th class="border p-2">Month</th>
-                    <th class="border p-2">Total Appointment</th>
+                    <th class="border p-2">Total New Patient</th>
                     <th class="border p-2">SSB</th>
-                    <th class="border p-2">SSB Attend</th>
-                    <th class="border p-2">SSB Miss</th>
                     <th class="border p-2">Online</th>
-                    <th class="border p-2">Online Attend</th>
-                    <th class="border p-2">Online Miss</th>
                 </tr>
             </thead>
             <tbody>
@@ -21,19 +17,13 @@
                         <td class="border text-center">{{ $month }}</td>
                         <td class="border">{{ $item["total"] }}</td>
                         <td class="border">{{ $item["ssb"] }} ({{ $item["ssb-percent"] }})</td>
-                        <td class="border">{{ $item["ssb-attend"] }} ({{ $item["ssb-attend-percent"] }})</td>
-                        <td class="border">{{ $item["ssb-miss"] }} ({{ $item["ssb-miss-percent"] }})</td>
                         <td class="border">{{ $item["online"] }} ({{ $item["online-percent"] }})</td>
-                        <td class="border">{{ $item["online-attend"] }} ({{ $item["online-attend-percent"] }})</td>
-                        <td class="border">{{ $item["online-miss"] }} ({{ $item["online-miss-percent"] }})</td>
                     </tr>
-                    @foreach ($item["online-type"] as $type => $count)
+                    @foreach ($item["online-type"] as $type => $typeItem)
                         <tr class="transition hover:bg-blue-50">
-                            <td colspan="4"></td>
+                            <td class="border" colspan="2"></td>
                             <td class="border text-center">{{ $type }}</td>
-                            <td class="border">{{ $count["count"] }} ({{ $count["percent"] }})</td>
-                            <td class="border"></td>
-                            <td></td>
+                            <td class="border">{{ $typeItem["count"] }} ({{ $typeItem["percent"] }})</td>
                         </tr>
                     @endforeach
                 @endforeach
