@@ -358,4 +358,51 @@ class QueryController extends Controller
 
         return view('Query.newpatient-percentage', compact('data'));
     }
+
+    public function getAppointment()
+    {
+        $start = '2026-03-01';
+        $end = '2026-05-30';
+
+        $appointments = DB::connection('SSB')
+            ->table('HNAPPMNT_HEADER')
+            ->leftJoin('HNPAT_NAME', 'HNAPPMNT_HEADER.HN', 'HNPAT_NAME.HN')
+            ->whereNull('CxlReasonCode')
+            ->where('HNPAT_NAME.SuffixSmall', 0)
+            ->where('AppointDateTime', '>=', $start)
+            ->where('AppointDateTime', '<=', $end)
+            ->where('Doctor', 'V9999')
+            ->select(
+                'HNAPPMNT_HEADER.AppointmentNo',
+                'HNAPPMNT_HEADER.AppointDateTime',
+                'HNAPPMNT_HEADER.HN',
+                'HNPAT_NAME.FirstName',
+                'HNPAT_NAME.LastName',
+            )
+            ->orderBy('HNAPPMNT_HEADER.AppointDateTime', 'asc')
+            ->get();
+
+        $data = [
+            'SAP' => [],
+            'EVAP' => [],
+            'VAP' => [],
+        ];
+        foreach ($appointments as $appointment) {
+            $appointment->FullName = HelperController::FullName($appointment->FirstName, $appointment->LastName);
+            $substring = substr($appointment->AppointmentNo, 0, 1);
+            switch ($substring) {
+                case 'S':
+                    $data['SAP'][] = $appointment;
+                    break;
+                case 'E':
+                    $data['EVAP'][] = $appointment;
+                    break;
+                case 'V':
+                    $data['VAP'][] = $appointment;
+                    break;
+            }
+        }
+        
+        return view('Query.appointments', compact('data'));
+    }
 }

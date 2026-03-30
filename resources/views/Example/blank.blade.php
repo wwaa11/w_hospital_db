@@ -1,4 +1,4 @@
-@extends('layout')
+@extends("layouts.app")
 @section('content')
     <div class="w-2/3 m-auto flex py-3 border-t-2 border-x-2">
         <div class="flex-grow text-end me-3">

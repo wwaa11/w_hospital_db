@@ -56,6 +56,32 @@ class K2Logger
         $this->writeLog($logData);
     }
 
+    public function skipEquipment($clinic, $environment, $data)
+    {
+        $logData = [
+            'timestamp'   => now()->format($this->dateFormat),
+            'user'        => Auth::user()->name ?? 'System',
+            'clinic'      => $clinic,
+            'environment' => $environment,
+            'type'        => 'SKIP_EQUIPMENT',
+            'data'        => $data,
+        ];
+        $this->writeLog($logData);
+    }
+
+    public function logEquipment($clinic, $environment, $data)
+    {
+        $logData = [
+            'timestamp'   => now()->format($this->dateFormat),
+            'user'        => Auth::user()->name ?? 'System',
+            'clinic'      => $clinic,
+            'environment' => $environment,
+            'type'        => 'LOG_EQUIPMENT',
+            'data'        => $data,
+        ];
+        $this->writeLog($logData);
+    }
+
     protected function writeLog($logData)
     {
         Log::channel('k2')->info($logData);
