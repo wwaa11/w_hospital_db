@@ -6,6 +6,7 @@ use App\Imports\Med3Deactivate;
 use App\Imports\Procedure;
 use App\Imports\Equipment;
 use App\Imports\EquipmentDeactivate;
+use App\Imports\Anesthesia;
 use DB;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -228,6 +229,32 @@ class K2Controller extends Controller
             $clinicText = count($clinics) === 1 ? $clinics[0] : 'selected clinics';
 
             return redirect()->back()->with('success', "Med3 data has been successfully uploaded to {$clinicText} in " . ($environment === 'K2DEV_SUR' ? 'Development' : 'Production') . " environment.");
+        } catch (\Exception $e) {
+            dd($e->getMessage());
+
+            return redirect()->back()->with('error', 'Error uploading file: ' . $e->getMessage());
+        }
+    }
+
+    public function Anesthesia(Request $request)
+    {
+
+        return view('k2.Anesthesia_upload');
+    }
+
+    public function uploadAnesthesiaFile(Request $request)
+    {
+        $request->validate([
+            'environment' => 'required|in:K2DEV_SUR,K2PROD_SUR',
+            'file'        => 'required|file|mimes:xlsx,xls',
+        ]);
+        try {
+            $file        = $request->file('file');
+            $environment = $request->input('environment');
+
+            Excel::import(new Anesthesia($environment), $file);
+
+            return redirect()->back()->with('success', "Anesthesia data has been successfully uploaded in " . ($environment === 'K2DEV_SUR' ? 'Development' : 'Production') . " environment.");
         } catch (\Exception $e) {
             dd($e->getMessage());
 

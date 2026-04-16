@@ -42,4 +42,7 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::get('/k2/equipment/deactivate', [K2Controller::class, 'EquipmentDeactivate'])->name('k2.equipment.deactivate');
     Route::post('/k2/equipment/deactivate', [K2Controller::class, 'EquipmentDeactivateUpload'])->name('k2.uploadEquipmentDeactivateFile');
+
+    Route::get('/k2/anesthesia', [K2Controller::class, 'Anesthesia'])->name('k2.anesthesia');
+    Route::post('/k2/anesthesia', [K2Controller::class, 'uploadAnesthesiaFile'])->name('k2.uploadAnesthesiaFile');
 });
