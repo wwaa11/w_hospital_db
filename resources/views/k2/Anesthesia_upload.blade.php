@@ -44,6 +44,7 @@
                                         <tr class="bg-gray-50">
                                             <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700" rowspan="2">Anesthesia Name</th>
                                             <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700" rowspan="2">Hours</th>
+                                            <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700" rowspan="2">Hours Used</th>
                                             <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700" colspan="2">THAI</th>
                                             <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700" colspan="2">INTER</th>
                                             <th class="border px-4 py-2 text-center text-sm font-semibold text-gray-700" colspan="2">ARAB</th>
@@ -61,6 +62,7 @@
                                         <tr>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">Name</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">0.5</td>
+                                            <td class="border-b px-4 py-2 text-sm text-gray-700">1</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">1,000-1,200</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">3,000-4,500</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">1,000-1,200</td>
@@ -70,7 +72,8 @@
                                         </tr>
                                         <tr>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">Name</td>
-                                            <td class="border-b px-4 py-2 text-sm text-gray-700">1.0</td>
+                                            <td class="border-b px-4 py-2 text-sm text-gray-700">1</td>
+                                            <td class="border-b px-4 py-2 text-sm text-gray-700">1.5</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">2,000-2,400</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">6,000-7,200</td>
                                             <td class="border-b px-4 py-2 text-sm text-gray-700">2,000-2,400</td>
