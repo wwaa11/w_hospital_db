@@ -6,9 +6,17 @@ use Cache;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
+use App\Http\Controllers\HelperController;
 
 class QueryController extends Controller
 {
+    public $HelperController;
+
+    public function __construct()
+    {
+        $this->HelperController = new HelperController();
+    }
+
     public function Depression(Request $request)
     {
         $startDate = $request->input('startdate', date('Y-01-01'));
@@ -404,5 +412,53 @@ class QueryController extends Controller
         }
         
         return view('Query.appointments', compact('data'));
+    }
+
+    public function getSSBAppointment()
+    {
+        $start = '2026-04-30';
+        $end = '2026-05-08';
+
+        $clinics = DB::connection('SSB')->table('DNSYSCONFIG')->where('CtrlCode', '42203')->get();
+
+        $appointments = DB::connection('SSB')
+            ->table('HNAPPMNT_HEADER')
+            ->whereNull('CxlReasonCode')
+            ->where('AppointDateTime', '>=', $start)
+            ->where('AppointDateTime', '<=', $end)
+            ->select(
+                'HNAPPMNT_HEADER.AppointmentNo',
+                'HNAPPMNT_HEADER.AppointDateTime',
+                'HNAPPMNT_HEADER.HN',
+                'HNAPPMNT_HEADER.Clinic',
+            )
+            ->orderBy('HNAPPMNT_HEADER.AppointDateTime', 'asc')
+            ->get();
+        $data = [];
+        $dateTotal = [];
+        foreach ($appointments as $appointment) {
+            $clinic = $this->HelperController::ClinicName($clinics, $appointment->Clinic);
+            $appDate = date('Y-m-d', strtotime($appointment->AppointDateTime));
+            if (! isset($data[$clinic])) {
+                $data[$clinic] = [
+                    '2026-04-30' => 0,
+                    '2026-05-01' => 0,
+                    '2026-05-02' => 0,
+                    '2026-05-03' => 0,
+                    '2026-05-04' => 0,
+                    '2026-05-05' => 0,
+                    '2026-05-06' => 0,
+                    '2026-05-07' => 0,
+                    '2026-05-08' => 0,
+                ];
+            }
+            $data[$clinic][$appDate]++;
+            if(! isset($dateTotal[$appDate])) {
+                $dateTotal[$appDate] = 0;
+            }
+            $dateTotal[$appDate]++;
+        }
+        
+        return view('Query.ssb-appointments', compact('data', 'dateTotal'));
     }
 }

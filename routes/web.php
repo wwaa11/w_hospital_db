@@ -16,6 +16,7 @@ Route::get('/depression', [QueryController::class, 'Depression'])->name('depress
 Route::get('/apppercent', [QueryController::class, 'appPercentOnline'])->name('apppercent.index');
 Route::get('/newpercent', [QueryController::class, 'newPatientOnline'])->name('newpercent.index');
 Route::get('/appointments', [QueryController::class, 'getAppointment'])->name('appointments.index');
+Route::get('/ssb/appointments', [QueryController::class, 'getSSBAppointment'])->name('ssb.appointments.index');
 
 // K2 Datamanagement
 Route::get('/login', [AuthController::class, 'login'])->name('login');
@@ -45,4 +46,6 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::get('/k2/anesthesia', [K2Controller::class, 'Anesthesia'])->name('k2.anesthesia');
     Route::post('/k2/anesthesia', [K2Controller::class, 'uploadAnesthesiaFile'])->name('k2.uploadAnesthesiaFile');
+
+
 });
