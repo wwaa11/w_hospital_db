@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [CoreController::class, 'index'])->name('index');
 
+Route::get('/random', [CoreController::class, 'random'])->name('random');
+Route::post('/random/upload', [CoreController::class, 'randomUpload'])->name('random.upload');
+Route::post('/random/pick', [CoreController::class, 'randomPick'])->name('random.pick');
+Route::post('/random/clear', [CoreController::class, 'randomClear'])->name('random.clear');
+Route::post('/random/clear-history', [CoreController::class, 'randomClearHistory'])->name('random.clearHistory');
+
 // Use for Local query
 Route::get('/query', [CoreController::class, 'query']);
 
